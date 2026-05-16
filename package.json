@@ -1,0 +1,12 @@
+{
+  "name": "droidmeter",
+  "private": true,
+  "scripts": {
+    "dev:server": "npm run dev --workspace=server",
+    "dev:web": "npm run dev --workspace=web",
+    "test:server": "npm run test --workspace=server",
+    "test:web": "npm run test --workspace=web",
+    "test": "npm run test --workspaces --if-present"
+  },
+  "workspaces": ["server", "web"]
+}
