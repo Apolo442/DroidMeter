@@ -1,5 +1,6 @@
 'use client';
-import { Wifi, Thermometer, Monitor } from 'lucide-react';
+import { Wifi, Thermometer, Monitor, Cpu } from 'lucide-react';
+import { useDashboardStore } from '@/lib/store';
 
 const ARC_LEN  = 100.53;
 const ARC_PATH = 'M 8,44 A 32,32 0 0,1 72,44';
@@ -13,7 +14,7 @@ function BatteryGauge({ pct }: { pct: number }) {
         <path d={ARC_PATH} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="7" strokeLinecap="round" />
         <path d={ARC_PATH} fill="none" stroke={GREEN} strokeWidth="7" strokeLinecap="round"
           strokeDasharray={ARC_LEN} strokeDashoffset={offset}
-          style={{ filter: `drop-shadow(0 0 4px ${GREEN}88)` }} />
+          style={{ filter: 'drop-shadow(0 0 4px #30d15888)' }} />
         <text x="40" y="44" textAnchor="middle" fontSize="13" fontWeight="700" fill={GREEN}>{pct}%</text>
       </svg>
     </div>
@@ -30,7 +31,32 @@ function Row({ icon, label, value }: { icon: React.ReactNode; label: string; val
   );
 }
 
+function formatScreenTime(sec: number): string {
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  if (h > 0) return `${h}h${m.toString().padStart(2, '0')}`;
+  return `${m}m`;
+}
+
+const STATUS_LABEL: Record<string, string> = {
+  charging: 'Carregando',
+  discharging: 'Descarregando',
+  full: 'Completo',
+  unknown: 'Desconhecido',
+};
+
 export function HubHealthWidget() {
+  const hub = useDashboardStore((s) => s.state.hub);
+
+  const batteryPct    = hub?.battery.level ?? 0;
+  const batteryStatus = hub ? (STATUS_LABEL[hub.battery.status] ?? '—') : '—';
+  const batTemp       = hub ? `${hub.battery.temperature}°C` : '—';
+  const cpuTemp       = hub ? `${hub.cpuTemp}°C` : '—';
+  const screenVal     = hub
+    ? `${hub.screen.brightnessPercent}% ${formatScreenTime(hub.screen.onTimeSec)}`
+    : '—';
+  const wifiVal = hub ? `${hub.wifi.signalLabel} ${hub.wifi.latencyMs}ms` : '—';
+
   return (
     <div className="glass-widget h-full flex flex-col" style={{ borderRadius: '14px 14px 14px 26px',
       padding: 'clamp(8px,2vh,14px) clamp(10px,2vw,16px)',
@@ -41,19 +67,20 @@ export function HubHealthWidget() {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', flexShrink: 0 }}>
-        <BatteryGauge pct={82} />
+        <BatteryGauge pct={batteryPct} />
         <div style={{ paddingBottom: '6px' }}>
           <div style={{ fontSize: 'clamp(9px,1.5vh,12px)', fontWeight: 700, color: GREEN, lineHeight: 1.2 }}>Bateria</div>
-          <div style={{ fontSize: 'clamp(7px,1.1vh,9px)', color: '#636366' }}>Carregando</div>
+          <div style={{ fontSize: 'clamp(7px,1.1vh,9px)', color: '#636366' }}>{batteryStatus}</div>
         </div>
       </div>
 
       <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)', flexShrink: 0 }} />
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-around', minHeight: 0 }}>
-        <Row icon={<Thermometer size={10} />} label="Temp"  value="34.8°C" />
-        <Row icon={<Monitor     size={10} />} label="Tela"  value="45% 01h32" />
-        <Row icon={<Wifi        size={10} />} label="Wi-Fi" value="Forte 3ms" />
+        <Row icon={<Thermometer size={10} />} label="Bat"   value={batTemp} />
+        <Row icon={<Cpu          size={10} />} label="CPU"   value={cpuTemp} />
+        <Row icon={<Monitor      size={10} />} label="Tela"  value={screenVal} />
+        <Row icon={<Wifi         size={10} />} label="Wi-Fi" value={wifiVal} />
       </div>
     </div>
   );
