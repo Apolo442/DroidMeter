@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useReducer } from 'react';
 import { useDashboardStore } from '@/lib/store';
 import { Maximize2, Minimize2, Music2, SkipBack, SkipForward, Play, Pause } from 'lucide-react';
 import type { SpotifyQueueItem } from '@shared/types';
@@ -39,7 +39,7 @@ export function SpotifyWidget({ isExpanded = false, onToggleExpanded }: SpotifyW
 
   const displayPlaying = optimisticPlaying !== null ? optimisticPlaying : (spotify?.isPlaying ?? false);
 
-  // Âncora de progresso: última posição conhecida + momento em que foi recebida
+  // Âncora: última posição conhecida pelo WebSocket + instante em que chegou
   const progressAnchor = useRef({ ms: spotify?.progressMs ?? 0, at: Date.now(), playing: spotify?.isPlaying ?? false });
   useEffect(() => {
     if (spotify) {
@@ -47,16 +47,17 @@ export function SpotifyWidget({ isExpanded = false, onToggleExpanded }: SpotifyW
     }
   }, [spotify?.progressMs, spotify?.isPlaying]);
 
-  // Progresso local interpolado — atualiza a cada 500ms para animação suave
-  const [liveProgressMs, setLiveProgressMs] = useState<number>(spotify?.progressMs ?? 0);
+  // Força re-renders a cada 250ms — liveProgressMs calculado no próprio render (sem state)
+  const [, tick] = useReducer(n => n + 1, 0);
   useEffect(() => {
-    const tick = () => {
-      const { ms, at, playing } = progressAnchor.current;
-      setLiveProgressMs(playing ? ms + (Date.now() - at) : ms);
-    };
-    const id = setInterval(tick, 500);
+    const id = setInterval(tick, 250);
     return () => clearInterval(id);
   }, []);
+
+  const { ms: anchorMs, at: anchorAt, playing: anchorPlaying } = progressAnchor.current;
+  const liveProgressMs = optimisticTrack ? 0
+    : anchorPlaying ? anchorMs + (Date.now() - anchorAt)
+    : anchorMs;
 
   // Quando o WebSocket confirma nova faixa: limpa estado otimista e repopula a fila local
   useEffect(() => {
@@ -122,7 +123,7 @@ export function SpotifyWidget({ isExpanded = false, onToggleExpanded }: SpotifyW
     );
   }
 
-  const pct = !optimisticTrack && displayTrack.durationMs
+  const pct = displayTrack.durationMs
     ? Math.min((liveProgressMs / displayTrack.durationMs) * 100, 100)
     : 0;
 
@@ -204,7 +205,7 @@ export function SpotifyWidget({ isExpanded = false, onToggleExpanded }: SpotifyW
               }} />
             ) : (
               <>
-                <div key={displayTrack.track} style={{ height: '100%', borderRadius: '999px', width: `${pct}%`, background: '#1db954', transition: 'width 0.5s linear' }} />
+                <div key={displayTrack.track} style={{ height: '100%', borderRadius: '999px', width: `${pct}%`, background: '#1db954', transition: 'width 0.25s linear' }} />
                 <div style={{
                   position: 'absolute', top: '50%',
                   left: `${pct}%`,
