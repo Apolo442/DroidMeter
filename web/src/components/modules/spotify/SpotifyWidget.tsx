@@ -33,7 +33,9 @@ export function SpotifyWidget({ isExpanded = false, onToggleExpanded }: SpotifyW
   const [optimisticPlaying, setOptimisticPlaying] = useState<boolean | null>(null);
   const [pendingTrackAction, setPendingTrackAction] = useState<'next' | 'prev' | null>(null);
   const [optimisticTrack, setOptimisticTrack] = useState<SpotifyQueueItem | null>(null);
-  const [remainingQueue, setRemainingQueue] = useState<SpotifyQueueItem[]>([]);
+  const [remainingQueue, setRemainingQueue] = useState<SpotifyQueueItem[]>(
+    () => spotify?.queue ?? []
+  );
 
   const displayPlaying = optimisticPlaying !== null ? optimisticPlaying : (spotify?.isPlaying ?? false);
 
@@ -75,6 +77,7 @@ export function SpotifyWidget({ isExpanded = false, onToggleExpanded }: SpotifyW
 
   const handlePrev = useCallback(() => {
     setOptimisticTrack(null);
+    setRemainingQueue([]);
     setPendingTrackAction('prev');
     spotifyControl('prev');
     setTimeout(() => setPendingTrackAction(null), 900);

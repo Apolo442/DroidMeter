@@ -53,7 +53,7 @@ export function createWorker({ updateState, broadcast }: Deps) {
                 );
               }
             } catch {
-              lastTrackId = null;
+              lastTrackId = trackId;  // preserve — no retry until next track change
               lastQueue = [];
             }
           } else {

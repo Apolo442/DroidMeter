@@ -165,20 +165,28 @@ describe('spotify worker', () => {
     });
   });
 
-  it('recupera fila no ciclo seguinte após falha transiente', async () => {
+  it('não faz retry da fila no mesmo ciclo após falha — recupera na próxima troca de faixa', async () => {
+    const PLAYING_2 = {
+      ...PLAYING,
+      item: { ...PLAYING.item, id: 'track-xyz', name: 'Faint' },
+    };
+
     mockFetch
       .mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve(PLAYING) })        // ciclo 1: currently-playing
       .mockRejectedValueOnce(new Error('network error'))                                              // ciclo 1: queue falha
-      .mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve(PLAYING) })        // ciclo 2: currently-playing (mesma faixa)
-      .mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve(QUEUE_RESPONSE) });// ciclo 2: queue ok desta vez
+      .mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve(PLAYING) })        // ciclo 2: mesma faixa — NÃO faz queue fetch
+      .mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve(PLAYING_2) })      // ciclo 3: faixa nova — faz queue fetch
+      .mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve(QUEUE_RESPONSE) });// ciclo 3: queue ok
 
     const worker = createWorker({ updateState, broadcast });
     await worker.fetch(); // ciclo 1: queue falha, emite queue: []
-    await worker.fetch(); // ciclo 2: retry funciona, emite queue populada
+    await worker.fetch(); // ciclo 2: mesma faixa, NÃO retenta queue
+    await worker.fetch(); // ciclo 3: faixa nova, busca queue com sucesso
 
-    expect(mockFetch).toHaveBeenCalledTimes(4); // 2 fetches por ciclo
-    const secondCallState = updateState.mock.calls[1][0];
-    expect(secondCallState.spotify.queue).toEqual(
+    expect(mockFetch).toHaveBeenCalledTimes(5); // ciclo1(2) + ciclo2(1) + ciclo3(2)
+
+    const thirdCallState = updateState.mock.calls[2][0];
+    expect(thirdCallState.spotify.queue).toEqual(
       expect.arrayContaining([expect.objectContaining({ track: 'In the End' })]),
     );
   });
