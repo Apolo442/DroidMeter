@@ -15,6 +15,13 @@ export type WeatherState = {
   updatedAt: string;
 };
 
+export type SpotifyQueueItem = {
+  track: string;
+  artist: string;
+  album?: string;
+  coverUrl?: string;
+};
+
 export type SpotifyState = {
   isPlaying: boolean;
   track?: string;
@@ -24,6 +31,7 @@ export type SpotifyState = {
   coverUrl?: string;
   progressMs?: number;
   durationMs?: number;
+  queue?: SpotifyQueueItem[];
   updatedAt: string;
 };
 
@@ -61,11 +69,7 @@ export type HubState = {
     latencyMs: number;
     linkSpeedMbps: number;
   };
-  screen: {
-    onTimeSec: number;
-  };
   cpuTemp: number;
-  cpuUsage: number;
   updatedAt: string;
 };
 
