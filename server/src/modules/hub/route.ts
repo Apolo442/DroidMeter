@@ -1,10 +1,10 @@
 import type { FastifyInstance } from 'fastify';
-import type { DashboardState, HubState } from '@shared/types.js';
+import type { DashboardState, HubState, WsMessage } from '@shared/types.js';
 import { WS_EVENTS } from '@shared/types.js';
 
 type Deps = {
   updateState: (p: Partial<DashboardState>) => DashboardState;
-  broadcast: (m: { event: string; data: unknown }) => void;
+  broadcast: (m: WsMessage) => void;
 };
 
 export async function registerHubRoute(app: FastifyInstance, deps: Deps) {

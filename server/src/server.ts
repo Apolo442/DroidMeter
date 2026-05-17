@@ -1,7 +1,8 @@
 import Fastify from 'fastify';
 import fastifyWebsocket from '@fastify/websocket';
 import type { WebSocket } from '@fastify/websocket';
-import { getState } from './state.js';
+import { getState, updateState } from './state.js';
+import { registerHubRoute } from './modules/hub/route.js';
 import { WS_EVENTS } from '@shared/types.js';
 import type { WsMessage } from '@shared/types.js';
 
@@ -25,6 +26,8 @@ export async function buildServer() {
   });
 
   app.get('/health', async () => ({ ok: true, clients: clients.size }));
+
+  await registerHubRoute(app, { updateState, broadcast });
 
   return app;
 }
