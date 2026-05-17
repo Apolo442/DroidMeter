@@ -29,7 +29,7 @@ describe('system worker', () => {
   it('normaliza métricas e chama updateState', async () => {
     await createWorker({ updateState, broadcast }).fetch();
     expect(updateState).toHaveBeenCalledWith({
-      system: expect.objectContaining({ cpu: 22, memory: 63, disk: 48, gpu: 38, cpuTemp: 64, gpuTemp: 58 }),
+      system: expect.objectContaining({ cpu: 22, memory: 63, memoryUsedGb: 9.3, disk: 48, gpu: 38, cpuTemp: 64, gpuTemp: 58 }),
     });
   });
 

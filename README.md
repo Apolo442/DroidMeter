@@ -21,6 +21,14 @@
 
 DroidMeter é uma aplicação full-stack local, feita para rodar em um PC e ser acessada por um celular na rede local. O frontend renderiza uma interface calibrada para o Redmi Note 8 em landscape, enquanto o backend coleta dados do sistema, clima e Spotify e envia atualizações em tempo real por WebSocket.
 
+## Fluxo da Aplicação
+
+<p align="center">
+  <img src="web/public/flowchart.png" alt="Fluxo da aplicação DroidMeter" width="100%" />
+</p>
+
+O Fastify concentra os workers de dados, atualiza o estado compartilhado no backend e transmite mudanças por WebSocket. O Next.js renderiza o dashboard no celular, consome o estado em tempo real via Zustand e usa API routes próprias para ações interativas do Spotify.
+
 ## Funcionalidades
 
 - Dashboard calibrado para viewport `851 x 393` em landscape.

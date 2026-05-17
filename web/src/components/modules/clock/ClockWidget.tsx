@@ -34,11 +34,22 @@ export function ClockWidget() {
   const today = now.getDate();
 
   const RED = '#FF3B30';
+  const cameraCutoutMask = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath fill='white' d='M0 0 H100 V100 H17 C12 100 10 98 10 94 V81 C10 78 8 76 5 76 H5 C2 76 0 73 0 70 Z'/%3E%3C/svg%3E")`;
 
   return (
     <div
       className="glass-widget h-full flex flex-col"
-      style={{ borderRadius: '26px 14px 14px 14px', padding: 'clamp(12px,3vh,20px) clamp(14px,2.5vw,20px)', overflow: 'hidden' }}
+      style={{
+        borderRadius: '26px 14px 14px 14px',
+        padding: 'clamp(12px,3vh,20px) clamp(14px,2.5vw,20px)',
+        overflow: 'hidden',
+        WebkitMaskImage: cameraCutoutMask,
+        maskImage: cameraCutoutMask,
+        WebkitMaskSize: '100% 100%',
+        maskSize: '100% 100%',
+        WebkitMaskRepeat: 'no-repeat',
+        maskRepeat: 'no-repeat',
+      }}
     >
       {/* ── ÁREA SUPERIOR: hora ── */}
       <div style={{ flexShrink: 0 }}>

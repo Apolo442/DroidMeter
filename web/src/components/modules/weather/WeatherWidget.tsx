@@ -2,22 +2,65 @@
 
 import { useDashboardStore } from '@/lib/store';
 import {
-  Sun, CloudSun, Cloud, CloudFog, CloudDrizzle,
+  Sun, Moon, CloudSun, CloudMoon, CloudMoonRain, Cloud, CloudFog, CloudDrizzle,
   CloudRain, CloudSnow, CloudLightning, MapPin,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 type WmoInfo = { Icon: LucideIcon; color: string; label: string };
+type WeatherMode = 'day' | 'night' | 'cloudy';
 
-function wmoInfo(code: number): WmoInfo {
-  if (code === 0)  return { Icon: Sun,          color: '#FFD60A', label: 'Ensolarado' };
-  if (code <= 2)   return { Icon: CloudSun,     color: '#FFD60A', label: 'Parcialmente nublado' };
-  if (code === 3)  return { Icon: Cloud,        color: '#ffffff', label: 'Nublado' };
+const WEATHER_BACKGROUNDS: Record<WeatherMode, string> = {
+  day: 'linear-gradient(180deg, #1b3d6b 0%, #2e6db4 55%, #5499d8 100%)',
+  night: 'linear-gradient(180deg, #020518 0%, #283555 100%)',
+  cloudy: 'linear-gradient(180deg, #4D5E70 0%, #657688 100%)',
+};
+
+function timeToMinutes(time?: string) {
+  if (!time) return null;
+  const [h, m] = time.split(':').map(Number);
+  if (!Number.isFinite(h) || !Number.isFinite(m)) return null;
+  return h * 60 + m;
+}
+
+function isNightTime(time: string, sunrise?: string, sunset?: string) {
+  const current = timeToMinutes(time);
+  const rise = timeToMinutes(sunrise);
+  const set = timeToMinutes(sunset);
+  if (current == null || rise == null || set == null) return false;
+  return current < rise || current >= set;
+}
+
+function currentTimeHHMM() {
+  const now = new Date();
+  return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+}
+
+function isCloudyOrWet(code: number) {
+  return code === 3 || (code >= 45 && code <= 99);
+}
+
+function weatherMode(code: number, night: boolean): WeatherMode {
+  if (isCloudyOrWet(code)) return 'cloudy';
+  return night ? 'night' : 'day';
+}
+
+function wmoInfo(code: number, night = false): WmoInfo {
+  const neutral = night ? '#ffffff' : '#ffffff';
+  const rain = night ? '#dbeafe' : '#cde9ff';
+
+  if (code === 0)  return night
+    ? { Icon: Moon,     color: '#ffffff', label: 'Limpo' }
+    : { Icon: Sun,      color: '#FFD60A', label: 'Ensolarado' };
+  if (code <= 2)   return night
+    ? { Icon: CloudMoon, color: '#ffffff', label: 'Parcialmente nublado' }
+    : { Icon: CloudSun,  color: '#FFD60A', label: 'Parcialmente nublado' };
+  if (code === 3)  return { Icon: Cloud,        color: neutral, label: 'Nublado' };
   if (code <= 48)  return { Icon: CloudFog,     color: '#c0c0c0', label: 'Neblina' };
-  if (code <= 55)  return { Icon: CloudDrizzle, color: '#a0d4ff', label: 'Garoa' };
-  if (code <= 65)  return { Icon: CloudRain,    color: '#a0d4ff', label: 'Chuvoso' };
+  if (code <= 55)  return { Icon: night ? CloudMoonRain : CloudDrizzle, color: rain, label: 'Garoa' };
+  if (code <= 65)  return { Icon: night ? CloudMoonRain : CloudRain,    color: rain, label: 'Chuvoso' };
   if (code <= 75)  return { Icon: CloudSnow,    color: '#ffffff', label: 'Neve' };
-  if (code <= 82)  return { Icon: CloudRain,    color: '#a0d4ff', label: 'Chuva forte' };
+  if (code <= 82)  return { Icon: night ? CloudMoonRain : CloudRain,    color: rain, label: 'Chuva forte' };
   return             { Icon: CloudLightning,    color: '#FFD60A', label: 'Tempestade' };
 }
 
@@ -27,8 +70,9 @@ export function WeatherWidget() {
   const bg = {
     borderRadius: '14px',
     height: '100%',
-    background: 'linear-gradient(160deg, #1b3d6b 0%, #2e6db4 55%, #5499d8 100%)',
-    border: '1px solid rgba(255,255,255,0.10)',
+    background: WEATHER_BACKGROUNDS.day,
+    border: '1px solid rgba(0,0,0,0.16)',
+    boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.025)',
   } as const;
 
   if (!weather) {
@@ -39,7 +83,9 @@ export function WeatherWidget() {
     );
   }
 
-  const { Icon: CondIcon, color: condColor, label: condLabel } = wmoInfo(weather.conditionCode);
+  const isCurrentNight = isNightTime(currentTimeHHMM(), weather.sunrise, weather.sunset);
+  const mode = weatherMode(weather.conditionCode, isCurrentNight);
+  const { Icon: CondIcon, color: condColor, label: condLabel } = wmoInfo(weather.conditionCode, mode === 'night');
   const hourly  = (weather.hourly ?? []).slice(0, 6);
   const todayD  = (weather.daily  ?? [])[0];
   const tempMax = todayD?.tempMax ?? null;
@@ -48,6 +94,7 @@ export function WeatherWidget() {
   return (
     <div style={{
       ...bg,
+      background: WEATHER_BACKGROUNDS[mode],
       display: 'flex',
       flexDirection: 'column',
       padding: 'clamp(14px,3.2vh,20px) clamp(16px,2.8vw,24px)',
@@ -109,7 +156,8 @@ export function WeatherWidget() {
       {/* ── ZONA INFERIOR: previsão horária ── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', flexShrink: 0 }}>
         {hourly.length > 0 ? hourly.map((h, i) => {
-          const { Icon: HIcon, color: hColor } = wmoInfo(h.code);
+          const isHourNight = isNightTime(h.time, weather.sunrise, weather.sunset);
+          const { Icon: HIcon, color: hColor } = wmoInfo(h.code, isHourNight);
           return (
             <div key={i} style={{
               display: 'flex',

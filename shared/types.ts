@@ -30,6 +30,7 @@ export type SpotifyState = {
 export type SystemState = {
   cpu: number;
   memory: number;
+  memoryUsedGb?: number;
   disk: number;
   gpu?: number;
   cpuTemp?: number;
