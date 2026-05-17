@@ -48,11 +48,33 @@ export type GitHubState = {
   updatedAt: string;
 };
 
+export type HubState = {
+  battery: {
+    level: number;
+    status: 'charging' | 'discharging' | 'full' | 'unknown';
+    plugged: 'ac' | 'usb' | 'wireless' | 'unplugged';
+    temperature: number;
+  };
+  wifi: {
+    rssi: number;
+    signalLabel: 'Forte' | 'Bom' | 'Fraco';
+    latencyMs: number;
+    linkSpeedMbps: number;
+  };
+  screen: {
+    brightnessPercent: number;
+    onTimeSec: number;
+  };
+  cpuTemp: number;
+  updatedAt: string;
+};
+
 export type DashboardState = {
   weather?: WeatherState;
   spotify?: SpotifyState;
   system?: SystemState;
   github?: GitHubState;
+  hub?: HubState;
 };
 
 export const WS_EVENTS = {
@@ -61,6 +83,7 @@ export const WS_EVENTS = {
   SPOTIFY_UPDATE: 'spotify:update',
   SYSTEM_UPDATE: 'system:update',
   GITHUB_UPDATE: 'github:update',
+  HUB_UPDATE: 'hub:update',
 } as const;
 
 export type WsEvent = typeof WS_EVENTS[keyof typeof WS_EVENTS];
