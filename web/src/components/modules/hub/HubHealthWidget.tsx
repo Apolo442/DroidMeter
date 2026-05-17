@@ -1,5 +1,5 @@
 'use client';
-import { Wifi, Thermometer, Monitor, Cpu } from 'lucide-react';
+import { Wifi, Thermometer, Cpu } from 'lucide-react';
 import { useDashboardStore } from '@/lib/store';
 
 const ARC_LEN  = 100.53;
@@ -31,13 +31,6 @@ function Row({ icon, label, value }: { icon: React.ReactNode; label: string; val
   );
 }
 
-function formatScreenTime(sec: number): string {
-  const h = Math.floor(sec / 3600);
-  const m = Math.floor((sec % 3600) / 60);
-  if (h > 0) return `${h}h${m.toString().padStart(2, '0')}`;
-  return `${m}m`;
-}
-
 const STATUS_LABEL: Record<string, string> = {
   charging: 'Carregando',
   discharging: 'Descarregando',
@@ -51,8 +44,7 @@ export function HubHealthWidget() {
   const batteryPct    = hub?.battery.level ?? 0;
   const batteryStatus = hub ? (STATUS_LABEL[hub.battery.status] ?? '—') : '—';
   const batTemp       = hub ? `${hub.battery.temperature}°C` : '—';
-  const cpuTemp       = hub ? `${hub.cpuUsage}% · ${hub.cpuTemp}°C` : '—';
-  const screenVal     = hub ? formatScreenTime(hub.screen.onTimeSec) : '—';
+  const cpuTemp       = hub ? `${hub.cpuTemp}°C` : '—';
   const wifiVal = hub ? `${hub.wifi.signalLabel} ${hub.wifi.latencyMs}ms` : '—';
 
   return (
@@ -76,9 +68,8 @@ export function HubHealthWidget() {
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-around', minHeight: 0 }}>
         <Row icon={<Thermometer size={10} />} label="Bat"   value={batTemp} />
-        <Row icon={<Cpu          size={10} />} label="CPU"   value={cpuTemp} />
-        <Row icon={<Monitor      size={10} />} label="Tela"  value={screenVal} />
-        <Row icon={<Wifi         size={10} />} label="Wi-Fi" value={wifiVal} />
+        <Row icon={<Cpu         size={10} />} label="CPU"   value={cpuTemp} />
+        <Row icon={<Wifi        size={10} />} label="Wi-Fi" value={wifiVal} />
       </div>
     </div>
   );
