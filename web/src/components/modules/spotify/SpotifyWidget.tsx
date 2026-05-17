@@ -185,7 +185,7 @@ export function SpotifyWidget({ isExpanded = false, onToggleExpanded }: SpotifyW
               }} />
             ) : (
               <>
-                <div style={{ height: '100%', borderRadius: '999px', width: `${pct}%`, background: '#1db954', transition: 'width 1s linear' }} />
+                <div key={displayTrack.track} style={{ height: '100%', borderRadius: '999px', width: `${pct}%`, background: '#1db954', transition: 'width 1s linear' }} />
                 <div style={{
                   position: 'absolute', top: '50%',
                   left: `${pct}%`,
