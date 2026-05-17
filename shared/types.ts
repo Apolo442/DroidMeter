@@ -62,10 +62,10 @@ export type HubState = {
     linkSpeedMbps: number;
   };
   screen: {
-    brightnessPercent: number;
     onTimeSec: number;
   };
   cpuTemp: number;
+  cpuUsage: number;
   updatedAt: string;
 };
 

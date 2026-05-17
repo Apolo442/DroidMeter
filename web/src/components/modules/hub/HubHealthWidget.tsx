@@ -51,10 +51,8 @@ export function HubHealthWidget() {
   const batteryPct    = hub?.battery.level ?? 0;
   const batteryStatus = hub ? (STATUS_LABEL[hub.battery.status] ?? '—') : '—';
   const batTemp       = hub ? `${hub.battery.temperature}°C` : '—';
-  const cpuTemp       = hub ? `${hub.cpuTemp}°C` : '—';
-  const screenVal     = hub
-    ? `${hub.screen.brightnessPercent}% ${formatScreenTime(hub.screen.onTimeSec)}`
-    : '—';
+  const cpuTemp       = hub ? `${hub.cpuUsage}% · ${hub.cpuTemp}°C` : '—';
+  const screenVal     = hub ? formatScreenTime(hub.screen.onTimeSec) : '—';
   const wifiVal = hub ? `${hub.wifi.signalLabel} ${hub.wifi.latencyMs}ms` : '—';
 
   return (
