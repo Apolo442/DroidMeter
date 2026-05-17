@@ -173,21 +173,32 @@ export function SpotifyWidget({ isExpanded = false, onToggleExpanded }: SpotifyW
           {displayTrack.artist}{displayTrack.album ? ` · ${displayTrack.album}` : ''}
         </div>
 
-        {/* Barra de progresso — oculta quando faixa otimista não tem duração conhecida */}
-        {displayTrack.durationMs && (
-          <div style={{ marginTop: isExpanded ? '18px' : '6px' }}>
-            <div style={{ position: 'relative', height: isExpanded ? '5px' : '3px', borderRadius: '999px', background: 'rgba(255,255,255,0.12)' }}>
-              <div style={{ height: '100%', borderRadius: '999px', width: `${pct}%`, background: '#1db954', transition: 'width 1s linear' }} />
+        {/* Barra de progresso — loading animado durante estado otimista */}
+        <div style={{ marginTop: isExpanded ? '18px' : '6px' }}>
+          <div style={{ position: 'relative', height: isExpanded ? '5px' : '3px', borderRadius: '999px', background: 'rgba(255,255,255,0.12)', overflow: 'hidden' }}>
+            {optimisticTrack ? (
               <div style={{
-                position: 'absolute', top: '50%',
-                left: `${pct}%`,
-                transform: 'translate(-50%, -50%)',
-                width: isExpanded ? '11px' : '7px', height: isExpanded ? '11px' : '7px',
-                borderRadius: '50%',
-                background: '#ffffff',
-                boxShadow: '0 0 3px rgba(0,0,0,0.4)',
+                position: 'absolute', inset: 0,
+                width: '40%',
+                background: 'linear-gradient(90deg, transparent, rgba(29,185,84,0.6), transparent)',
+                animation: 'spotifyProgressPulse 1.2s ease-in-out infinite',
               }} />
-            </div>
+            ) : (
+              <>
+                <div style={{ height: '100%', borderRadius: '999px', width: `${pct}%`, background: '#1db954', transition: 'width 1s linear' }} />
+                <div style={{
+                  position: 'absolute', top: '50%',
+                  left: `${pct}%`,
+                  transform: 'translate(-50%, -50%)',
+                  width: isExpanded ? '11px' : '7px', height: isExpanded ? '11px' : '7px',
+                  borderRadius: '50%',
+                  background: '#ffffff',
+                  boxShadow: '0 0 3px rgba(0,0,0,0.4)',
+                }} />
+              </>
+            )}
+          </div>
+          {!optimisticTrack && displayTrack.durationMs && (
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: isExpanded ? '8px' : '3px' }}>
               <span data-testid="spotify-current" style={{ fontSize: isExpanded ? '10px' : '6px', color: 'rgba(255,255,255,0.4)', fontVariantNumeric: 'tabular-nums' }}>
                 {displayTrack.progressMs ? fmt(displayTrack.progressMs) : '0:00'}
@@ -196,8 +207,8 @@ export function SpotifyWidget({ isExpanded = false, onToggleExpanded }: SpotifyW
                 {fmt(displayTrack.durationMs)}
               </span>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Controles */}
         <div style={{ display: 'flex', alignItems: 'center', gap: isExpanded ? '34px' : '22px', marginTop: isExpanded ? '16px' : '4px' }}>
