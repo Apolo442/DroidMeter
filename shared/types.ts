@@ -69,7 +69,11 @@ export type HubState = {
     latencyMs: number;
     linkSpeedMbps: number;
   };
+  screen: {
+    onTimeSec: number;
+  };
   cpuTemp: number;
+  cpuUsage: number;
   updatedAt: string;
 };
 
