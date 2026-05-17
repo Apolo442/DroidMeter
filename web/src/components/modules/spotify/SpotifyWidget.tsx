@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useDashboardStore } from '@/lib/store';
 import { Maximize2, Minimize2, Music2, SkipBack, SkipForward, Play, Pause } from 'lucide-react';
 import type { SpotifyQueueItem } from '@shared/types';
@@ -38,6 +38,25 @@ export function SpotifyWidget({ isExpanded = false, onToggleExpanded }: SpotifyW
   );
 
   const displayPlaying = optimisticPlaying !== null ? optimisticPlaying : (spotify?.isPlaying ?? false);
+
+  // Âncora de progresso: última posição conhecida + momento em que foi recebida
+  const progressAnchor = useRef({ ms: spotify?.progressMs ?? 0, at: Date.now(), playing: spotify?.isPlaying ?? false });
+  useEffect(() => {
+    if (spotify) {
+      progressAnchor.current = { ms: spotify.progressMs ?? 0, at: Date.now(), playing: spotify.isPlaying };
+    }
+  }, [spotify?.progressMs, spotify?.isPlaying]);
+
+  // Progresso local interpolado — atualiza a cada 500ms para animação suave
+  const [liveProgressMs, setLiveProgressMs] = useState<number>(spotify?.progressMs ?? 0);
+  useEffect(() => {
+    const tick = () => {
+      const { ms, at, playing } = progressAnchor.current;
+      setLiveProgressMs(playing ? ms + (Date.now() - at) : ms);
+    };
+    const id = setInterval(tick, 500);
+    return () => clearInterval(id);
+  }, []);
 
   // Quando o WebSocket confirma nova faixa: limpa estado otimista e repopula a fila local
   useEffect(() => {
@@ -103,8 +122,8 @@ export function SpotifyWidget({ isExpanded = false, onToggleExpanded }: SpotifyW
     );
   }
 
-  const pct = displayTrack.progressMs && displayTrack.durationMs
-    ? (displayTrack.progressMs / displayTrack.durationMs) * 100
+  const pct = !optimisticTrack && displayTrack.durationMs
+    ? Math.min((liveProgressMs / displayTrack.durationMs) * 100, 100)
     : 0;
 
   const btnStyle: React.CSSProperties = {
@@ -185,7 +204,7 @@ export function SpotifyWidget({ isExpanded = false, onToggleExpanded }: SpotifyW
               }} />
             ) : (
               <>
-                <div key={displayTrack.track} style={{ height: '100%', borderRadius: '999px', width: `${pct}%`, background: '#1db954', transition: 'width 1s linear' }} />
+                <div key={displayTrack.track} style={{ height: '100%', borderRadius: '999px', width: `${pct}%`, background: '#1db954', transition: 'width 0.5s linear' }} />
                 <div style={{
                   position: 'absolute', top: '50%',
                   left: `${pct}%`,
@@ -201,7 +220,7 @@ export function SpotifyWidget({ isExpanded = false, onToggleExpanded }: SpotifyW
           {!optimisticTrack && displayTrack.durationMs && (
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: isExpanded ? '8px' : '3px' }}>
               <span data-testid="spotify-current" style={{ fontSize: isExpanded ? '10px' : '6px', color: 'rgba(255,255,255,0.4)', fontVariantNumeric: 'tabular-nums' }}>
-                {displayTrack.progressMs ? fmt(displayTrack.progressMs) : '0:00'}
+                {fmt(liveProgressMs)}
               </span>
               <span data-testid="spotify-total" style={{ fontSize: isExpanded ? '10px' : '6px', color: 'rgba(255,255,255,0.4)', fontVariantNumeric: 'tabular-nums' }}>
                 {fmt(displayTrack.durationMs)}
