@@ -5,7 +5,12 @@
 <h1 align="center">DroidMeter</h1>
 
 <p align="center">
-  Um dashboard local para transformar um Redmi Note 8 em display de mesa para clima, Spotify, métricas do PC e saúde do hub.
+  A local dashboard that turns a Redmi Note 8 into a desktop display for weather, Spotify, PC metrics, and hub health.
+</p>
+
+<p align="center">
+  <a href="#pt-br"><img alt="Português Brasil" src="https://img.shields.io/badge/README-PT--BR-009739" /></a>
+  <a href="#english"><img alt="English" src="https://img.shields.io/badge/README-English-1f6feb" /></a>
 </p>
 
 <p align="center">
@@ -16,6 +21,12 @@
   <img alt="Tailwind CSS" src="https://img.shields.io/badge/Tailwind_CSS-4-38B2AC?logo=tailwindcss&logoColor=fff" />
   <img alt="Zustand" src="https://img.shields.io/badge/Zustand-5-764ABC" />
 </p>
+
+---
+
+## PT-BR
+
+[English version](#english)
 
 ## Visão Geral
 
@@ -128,3 +139,121 @@ npm run test          # testes dos workspaces
 - O layout foi ajustado para o Redmi Note 8 deitado.
 - `web/.env.local`, `.env`, builds e caches são ignorados pelo Git.
 - `stuff/STATUS.md` guarda o estado operacional do projeto durante a evolução da UI.
+
+---
+
+## English
+
+[Versão em português](#pt-br)
+
+## Overview
+
+DroidMeter is a local full-stack application designed to run on a PC and be opened from a phone on the same network. The frontend renders a dashboard calibrated for a Redmi Note 8 in landscape mode, while the backend collects system, weather, and Spotify data and streams live updates through WebSocket.
+
+## Application Flow
+
+<p align="center">
+  <img src="web/public/flowchart.png" alt="DroidMeter application flow" width="100%" />
+</p>
+
+Fastify owns the data workers, updates the shared backend state, and broadcasts changes over WebSocket. Next.js renders the dashboard on the phone, consumes live state through Zustand, and exposes API routes for interactive Spotify actions.
+
+## Features
+
+- Dashboard calibrated for a `851 x 393` landscape viewport.
+- Weather widget with day, night, and cloudy/rainy visual modes.
+- Spotify widget with album art, progress, and play/pause/next/previous controls.
+- System widget with RAM, CPU, and GPU semicircular gauges.
+- CPU/GPU temperatures and RAM usage in GB.
+- Mocked Hub Health widget for battery, temperature, screen, and Wi-Fi.
+- Dynamic WebSocket hostname so the phone can connect through the PC local IP.
+- Self-hosted SF Pro Text font and iOS-widget-inspired visuals.
+
+## Stack
+
+| Layer | Technology |
+| --- | --- |
+| Frontend | Next.js 15, React 19, Tailwind CSS v4 |
+| Backend | Fastify 5, `@fastify/websocket` |
+| State | Zustand 5 |
+| Types | TypeScript 5 shared in `shared/` |
+| Data | Open-Meteo, Spotify Web API, `systeminformation` |
+
+## Structure
+
+```text
+.
+├── server/                 # Fastify, workers, and WebSocket
+├── web/                    # Next.js app router and components
+├── shared/                 # Shared types and module config
+├── stuff/                  # Local notes, references, and status
+├── package.json            # Root workspaces and scripts
+└── .env.example            # Environment template
+```
+
+## Getting Started
+
+```bash
+npm install
+cp .env.example .env
+npm run droidmeter
+```
+
+Open:
+
+```text
+http://localhost:3000
+```
+
+On the phone, use the PC local network IP:
+
+```text
+http://<pc-ip>:3000
+```
+
+## Environment Variables
+
+The backend reads `.env` from the project root. Next.js API routes can also use `web/.env.local` for the Spotify flow.
+
+```env
+PORT=3333
+WEB_ORIGIN=http://localhost:3000
+NEXT_PUBLIC_WS_URL=ws://localhost:3333/ws
+
+SPOTIFY_CLIENT_ID=
+SPOTIFY_CLIENT_SECRET=
+SPOTIFY_REFRESH_TOKEN=
+
+WEATHER_LAT=-12.2664
+WEATHER_LON=-38.9663
+
+GITHUB_TOKEN=
+GITHUB_USERNAME=
+```
+
+To generate a new Spotify refresh token, open:
+
+```text
+http://127.0.0.1:3000/api/spotify/auth
+```
+
+Use this callback in the Spotify Developer Dashboard:
+
+```text
+http://127.0.0.1:3000/api/spotify/callback
+```
+
+## Scripts
+
+```bash
+npm run droidmeter    # backend + frontend in dev mode
+npm run dev:server    # Fastify only
+npm run dev:web       # Next.js only
+npm run test          # workspace tests
+```
+
+## Notes
+
+- The layout is tuned for a Redmi Note 8 in landscape mode.
+- `web/.env.local`, `.env`, builds, and caches are ignored by Git.
+- `stuff/STATUS.md` keeps the operational project context while the UI evolves.
