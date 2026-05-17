@@ -1,3 +1,6 @@
+export type WeatherHour = { time: string; temp: number; code: number };
+export type WeatherDay = { date: string; tempMin: number; tempMax: number; code: number };
+
 export type WeatherState = {
   temperature: number;
   feelsLike: number;
@@ -5,6 +8,10 @@ export type WeatherState = {
   windSpeed: number;
   rainChance: number;
   conditionCode: number;
+  sunrise?: string;
+  sunset?: string;
+  hourly?: WeatherHour[];
+  daily?: WeatherDay[];
   updatedAt: string;
 };
 
@@ -25,6 +32,8 @@ export type SystemState = {
   memory: number;
   disk: number;
   gpu?: number;
+  cpuTemp?: number;
+  gpuTemp?: number;
   uptime: number;
   updatedAt: string;
 };
