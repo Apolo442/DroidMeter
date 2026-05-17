@@ -164,4 +164,22 @@ describe('spotify worker', () => {
       spotify: expect.objectContaining({ track: 'Numb', queue: [] }),
     });
   });
+
+  it('recupera fila no ciclo seguinte após falha transiente', async () => {
+    mockFetch
+      .mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve(PLAYING) })        // ciclo 1: currently-playing
+      .mockRejectedValueOnce(new Error('network error'))                                              // ciclo 1: queue falha
+      .mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve(PLAYING) })        // ciclo 2: currently-playing (mesma faixa)
+      .mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve(QUEUE_RESPONSE) });// ciclo 2: queue ok desta vez
+
+    const worker = createWorker({ updateState, broadcast });
+    await worker.fetch(); // ciclo 1: queue falha, emite queue: []
+    await worker.fetch(); // ciclo 2: retry funciona, emite queue populada
+
+    expect(mockFetch).toHaveBeenCalledTimes(4); // 2 fetches por ciclo
+    const secondCallState = updateState.mock.calls[1][0];
+    expect(secondCallState.spotify.queue).toEqual(
+      expect.arrayContaining([expect.objectContaining({ track: 'In the End' })]),
+    );
+  });
 });

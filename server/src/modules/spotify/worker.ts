@@ -53,6 +53,7 @@ export function createWorker({ updateState, broadcast }: Deps) {
                 );
               }
             } catch {
+              lastTrackId = null;
               lastQueue = [];
             }
           } else {
