@@ -61,17 +61,20 @@ export function SpotifyWidget({ isExpanded = false, onToggleExpanded }: SpotifyW
   }, [displayPlaying]);
 
   const handleNext = useCallback(() => {
-    if (remainingQueue.length > 0) {
-      setOptimisticTrack(remainingQueue[0]);
-      setRemainingQueue(remainingQueue.slice(1));
-    } else {
-      setPendingTrackAction('next');
-      setTimeout(() => setPendingTrackAction(null), 900);
-    }
+    setRemainingQueue(prev => {
+      if (prev.length > 0) {
+        setOptimisticTrack(prev[0]);
+        return prev.slice(1);
+      }
+      return prev;
+    });
+    setPendingTrackAction('next');
+    setTimeout(() => setPendingTrackAction(null), 900);
     spotifyControl('next');
-  }, [remainingQueue]);
+  }, []);
 
   const handlePrev = useCallback(() => {
+    setOptimisticTrack(null);
     setPendingTrackAction('prev');
     spotifyControl('prev');
     setTimeout(() => setPendingTrackAction(null), 900);
