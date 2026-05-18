@@ -11,7 +11,7 @@ export async function registerHubRoute(app: FastifyInstance, deps: Deps) {
   app.post('/hub-health', async (request, reply) => {
     const body = request.body as Record<string, unknown> | null;
 
-    if (!body?.battery || !body?.wifi || body?.cpuTemp == null) {
+    if (!body?.battery || !body?.wifi || !body?.screen || body?.cpuTemp == null) {
       return reply.status(400).send({ error: 'payload invalido' });
     }
 

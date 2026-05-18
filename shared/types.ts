@@ -62,6 +62,7 @@ export type HubState = {
     status: 'charging' | 'discharging' | 'full' | 'unknown';
     plugged: 'ac' | 'usb' | 'wireless' | 'unplugged';
     temperature: number;
+    inputSuspended?: boolean;
   };
   wifi: {
     rssi: number;
@@ -70,10 +71,13 @@ export type HubState = {
     linkSpeedMbps: number;
   };
   screen: {
+    brightnessPercent: number;
     onTimeSec: number;
   };
   cpuTemp: number;
   cpuUsage: number;
+  memory: number;
+  memoryUsedGb: number;
   updatedAt: string;
 };
 

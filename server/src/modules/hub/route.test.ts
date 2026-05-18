@@ -13,10 +13,13 @@ describe('POST /hub-health', () => {
   }
 
   const validPayload = {
-    battery: { level: 80, status: 'charging', plugged: 'usb', temperature: 32 },
+    battery: { level: 80, status: 'charging', plugged: 'usb', temperature: 32, inputSuspended: false },
     wifi: { rssi: -55, signalLabel: 'Forte', latencyMs: 5, linkSpeedMbps: 72 },
     screen: { brightnessPercent: 50, onTimeSec: 3600 },
     cpuTemp: 38,
+    cpuUsage: 18,
+    memory: 48,
+    memoryUsedGb: 1.9,
     updatedAt: '2026-05-17T12:00:00Z',
   };
 

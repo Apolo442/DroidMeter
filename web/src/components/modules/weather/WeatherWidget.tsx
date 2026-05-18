@@ -15,6 +15,42 @@ const WEATHER_BACKGROUNDS: Record<WeatherMode, string> = {
   night: 'linear-gradient(180deg, #020518 0%, #283555 100%)',
   cloudy: 'linear-gradient(180deg, #4D5E70 0%, #657688 100%)',
 };
+const CORNER_REFRESH_GRAY = 'rgba(255,255,255,0.32)';
+
+function ReloadButton() {
+  return (
+    <button
+      type="button"
+      aria-label="Recarregar dashboard"
+      onClick={() => window.location.reload()}
+      style={{
+        position: 'absolute',
+        right: 0,
+        bottom: 0,
+        width: '42px',
+        height: '42px',
+        padding: 0,
+        border: 0,
+        borderRadius: '0 0 32px 0',
+        background: 'transparent',
+        cursor: 'pointer',
+        opacity: 0.78,
+      }}
+    >
+      <span style={{
+        position: 'absolute',
+        right: 0,
+        bottom: 0,
+        width: '34px',
+        height: '34px',
+        borderRight: `9px solid ${CORNER_REFRESH_GRAY}`,
+        borderBottom: `9px solid ${CORNER_REFRESH_GRAY}`,
+        borderRadius: '0 0 32px 0',
+        pointerEvents: 'none',
+      }} />
+    </button>
+  );
+}
 
 function timeToMinutes(time?: string) {
   if (!time) return null;
@@ -68,8 +104,9 @@ export function WeatherWidget() {
   const weather = useDashboardStore((s) => s.state.weather);
 
   const bg = {
-    borderRadius: '14px',
+    borderRadius: '14px 14px 32px 14px',
     height: '100%',
+    position: 'relative',
     background: WEATHER_BACKGROUNDS.day,
     border: '1px solid rgba(0,0,0,0.16)',
     boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.025)',
@@ -79,6 +116,7 @@ export function WeatherWidget() {
     return (
       <div style={{ ...bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)' }}>Carregando clima...</span>
+        <ReloadButton />
       </div>
     );
   }
@@ -97,6 +135,7 @@ export function WeatherWidget() {
       background: WEATHER_BACKGROUNDS[mode],
       display: 'flex',
       flexDirection: 'column',
+      position: 'relative',
       padding: 'clamp(14px,3.2vh,20px) clamp(16px,2.8vw,24px)',
       overflow: 'hidden',
     }}>
@@ -188,6 +227,7 @@ export function WeatherWidget() {
         )}
       </div>
 
+      <ReloadButton />
     </div>
   );
 }

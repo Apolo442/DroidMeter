@@ -5,7 +5,6 @@ import { initWebSocket } from '@/lib/websocket';
 import { ClockWidget }      from './modules/clock/ClockWidget';
 import { SpotifyWidget }    from './modules/spotify/SpotifyWidget';
 import { WeatherWidget }    from './modules/weather/WeatherWidget';
-import { SystemWidget }     from './modules/system/SystemWidget';
 import { HubHealthWidget }  from './modules/hub/HubHealthWidget';
 
 export function Dashboard() {
@@ -19,7 +18,7 @@ export function Dashboard() {
       style={{
         padding: '8px 10px',
         display: 'grid',
-        gridTemplateColumns: '25fr 60fr 15fr',
+        gridTemplateColumns: '32fr 68fr',
         gridTemplateRows: '58fr 42fr',
         gap: '10px',
       }}
@@ -39,9 +38,6 @@ export function Dashboard() {
         />
       </div>
       <div className="dashboard-cell" style={{ gridColumn: 2, gridRow: 2, minHeight: 0 }}><WeatherWidget /></div>
-
-      {/* Col 3 — sidebar, span 2 rows */}
-      <div className="dashboard-cell" style={{ gridColumn: 3, gridRow: '1 / 3', minHeight: 0 }}><SystemWidget /></div>
     </div>
   );
 }

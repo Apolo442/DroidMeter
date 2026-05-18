@@ -124,9 +124,19 @@ export function ClockWidget() {
               if (day === null) return <div key={i} />;
               const isToday   = day === today;
               const col       = i % 7;
+              const row       = Math.floor(i / 7);
               const isWeekend = col === 0 || col === 6;
+              const nudgeTowardCamera = col === 0 && row >= 3;
               return (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div
+                  key={i}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transform: nudgeTowardCamera ? 'translateX(8px)' : undefined,
+                  }}
+                >
                   <div style={{
                     width: 'clamp(13px,3.2vh,18px)', height: 'clamp(13px,3.2vh,18px)',
                     borderRadius: '50%',

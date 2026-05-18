@@ -1,35 +1,9 @@
 'use client';
-import { Wifi, Thermometer, Cpu } from 'lucide-react';
 import { useDashboardStore } from '@/lib/store';
 
-const ARC_LEN  = 100.53;
-const ARC_PATH = 'M 8,44 A 32,32 0 0,1 72,44';
-const GREEN    = '#30d158';
-
-function BatteryGauge({ pct }: { pct: number }) {
-  const offset = ARC_LEN * (1 - pct / 100);
-  return (
-    <div style={{ width: 'clamp(52px, 10vw, 72px)', flexShrink: 0 }}>
-      <svg viewBox="0 0 80 52" style={{ width: '100%', display: 'block' }}>
-        <path d={ARC_PATH} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="7" strokeLinecap="round" />
-        <path d={ARC_PATH} fill="none" stroke={GREEN} strokeWidth="7" strokeLinecap="round"
-          strokeDasharray={ARC_LEN} strokeDashoffset={offset}
-          style={{ filter: 'drop-shadow(0 0 4px #30d15888)' }} />
-        <text x="40" y="44" textAnchor="middle" fontSize="13" fontWeight="700" fill={GREEN}>{pct}%</text>
-      </svg>
-    </div>
-  );
-}
-
-function Row({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-      <span style={{ color: '#48484a', display: 'flex', flexShrink: 0 }}>{icon}</span>
-      <span style={{ fontSize: 'clamp(7px,1.1vh,9px)', color: '#636366', flexShrink: 0, width: '28px' }}>{label}</span>
-      <span style={{ fontSize: 'clamp(7px,1.1vh,9px)', color: GREEN, fontWeight: 600, flex: 1, textAlign: 'right' }}>{value}</span>
-    </div>
-  );
-}
+const ARC_LEN = 100.53;
+const ARC_PATH = 'M 8,46 A 32,32 0 0,1 72,46';
+const GREEN = '#30d158';
 
 const STATUS_LABEL: Record<string, string> = {
   charging: 'Carregando',
@@ -38,38 +12,231 @@ const STATUS_LABEL: Record<string, string> = {
   unknown: 'Desconhecido',
 };
 
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function formatScreenUptime(seconds?: number) {
+  if (seconds == null) return '--';
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  if (hours > 0) return `${hours}h${minutes.toString().padStart(2, '0')}`;
+  return `${minutes}m`;
+}
+
+function temperaturePalette(temp?: number) {
+  if (temp == null) return { from: '#37DB00', to: '#BCFF00', text: '#BCFF00', label: '--' };
+  if (temp >= 42) return { from: '#FF9F0A', to: '#FF375F', text: '#FF453A', label: 'Critico' };
+  if (temp >= 38) return { from: '#BCFF00', to: '#FF9F0A', text: '#FFB340', label: 'Quente' };
+  if (temp <= 28) return { from: '#37DB00', to: '#BCFF00', text: '#BCFF00', label: 'Frio' };
+  return { from: '#37DB00', to: '#FFD60A', text: '#BCFF00', label: 'OK' };
+}
+
+function Gauge({
+  id,
+  label,
+  value,
+  display,
+  from,
+  to,
+  textColor,
+}: {
+  id: string;
+  label: string;
+  value: number;
+  display: string;
+  from: string;
+  to: string;
+  textColor: string;
+}) {
+  const offset = ARC_LEN * (1 - clamp(value, 0, 100) / 100);
+
+  return (
+    <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <div style={{ width: '100%', maxWidth: '82px' }}>
+        <svg viewBox="0 0 80 54" style={{ width: '100%', display: 'block' }}>
+          <defs>
+            <linearGradient id={id} x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor={from} />
+              <stop offset="100%" stopColor={to} />
+            </linearGradient>
+          </defs>
+          <path d={ARC_PATH} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="7" strokeLinecap="round" />
+          <path
+            d={ARC_PATH}
+            fill="none"
+            stroke={`url(#${id})`}
+            strokeWidth="7"
+            strokeLinecap="round"
+            strokeDasharray={ARC_LEN}
+            strokeDashoffset={offset}
+          />
+          <text x="40" y="34" textAnchor="middle" fontSize="12" fontWeight="800" fill={textColor}>{display}</text>
+          <text x="40" y="45" textAnchor="middle" fontSize="6.2" fontWeight="700" fill="#8e8e93">{label}</text>
+        </svg>
+      </div>
+    </div>
+  );
+}
+
+function WifiBars({ rssi }: { rssi?: number }) {
+  const level = rssi == null ? 0 : rssi >= -55 ? 4 : rssi >= -65 ? 3 : rssi >= -75 ? 2 : 1;
+  const bars = [7, 11, 15, 19];
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'end', gap: '3px', height: '20px', flexShrink: 0 }}>
+      {bars.map((height, index) => {
+        const active = index < level;
+        return (
+          <div
+            key={height}
+            style={{
+              width: '6px',
+              height,
+              borderRadius: '4px 4px 2px 2px',
+              background: active ? 'linear-gradient(180deg, #64D2FF 0%, #0A84FF 100%)' : 'rgba(255,255,255,0.08)',
+              boxShadow: active ? '0 0 6px rgba(10,132,255,0.35)' : 'none',
+            }}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+function statusColor(value?: number, warn = 70, danger = 85) {
+  if (value == null) return '#86868b';
+  if (value >= danger) return '#ff453a';
+  if (value >= warn) return '#ffd60a';
+  return GREEN;
+}
+
+function tempColor(temp?: number) {
+  if (temp == null) return '#86868b';
+  if (temp >= 42) return '#ff453a';
+  if (temp >= 38) return '#ffd60a';
+  return GREEN;
+}
+
+function pingColor(ms?: number) {
+  if (ms == null) return '#86868b';
+  if (ms >= 120) return '#ff453a';
+  if (ms >= 60) return '#ffd60a';
+  return GREEN;
+}
+
+function batteryStatusColor(status?: string, inputSuspended?: boolean) {
+  if (inputSuspended) return '#ffd60a';
+  if (status === 'charging' || status === 'full') return GREEN;
+  if (status === 'discharging') return '#ffd60a';
+  return '#86868b';
+}
+
+function InfoCard({ label, value, color = GREEN }: { label: string; value: string; color?: string }) {
+  const valueParts = value.split(' / ');
+
+  return (
+    <div style={{
+      minWidth: 0,
+      minHeight: 0,
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'space-evenly',
+      gap: '0',
+      padding: '4px 7px',
+      borderRadius: '10px',
+      background: 'rgba(255,255,255,0.045)',
+      border: '1px solid rgba(255,255,255,0.055)',
+      overflow: 'hidden',
+    }}>
+      <span style={{ color: '#86868b', fontSize: 'clamp(5.8px,0.8vh,7.2px)', fontWeight: 750, textTransform: 'uppercase', letterSpacing: '0.08em', whiteSpace: 'nowrap', lineHeight: 1, display: 'block' }}>
+        {label}
+      </span>
+      <span style={{ color, fontSize: 'clamp(9px,1.28vh,11.5px)', fontWeight: 850, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: 1, display: 'block' }}>
+        {valueParts.length === 2 ? (
+          <>
+            {valueParts[0]}
+            <span style={{ display: 'inline-block', width: '1px', height: '0.9em', margin: '0 5px', background: 'rgba(255,255,255,0.18)', verticalAlign: '-0.12em' }} />
+            {valueParts[1]}
+          </>
+        ) : value}
+      </span>
+    </div>
+  );
+}
+
 export function HubHealthWidget() {
   const hub = useDashboardStore((s) => s.state.hub);
 
-  const batteryPct    = hub?.battery.level ?? 0;
-  const batteryStatus = hub ? (STATUS_LABEL[hub.battery.status] ?? '—') : '—';
-  const batTemp       = hub ? `${hub.battery.temperature}°C` : '—';
-  const cpuTemp       = hub ? `${hub.cpuTemp}°C` : '—';
-  const wifiVal = hub ? `${hub.wifi.signalLabel} ${hub.wifi.latencyMs}ms` : '—';
+  const batteryPct = hub?.battery.level ?? 0;
+  const batteryStatus = hub?.battery.inputSuspended ? 'Carga pausada' : hub ? (STATUS_LABEL[hub.battery.status] ?? '--') : '--';
+  const batteryTemp = hub?.battery.temperature;
+  const tempPalette = temperaturePalette(batteryTemp);
+  const tempValue = batteryTemp == null ? 0 : ((clamp(batteryTemp, 20, 45) - 20) / 25) * 100;
+  const screen = hub?.screen?.brightnessPercent != null ? `${hub.screen.brightnessPercent}%` : '--';
+  const uptime = formatScreenUptime(hub?.screen?.onTimeSec);
+  const wifiLabel = hub ? `${hub.wifi.signalLabel} - ${hub.wifi.latencyMs}ms` : '--';
 
   return (
-    <div className="glass-widget h-full flex flex-col" style={{ borderRadius: '14px 14px 14px 26px',
-      padding: 'clamp(8px,2vh,14px) clamp(10px,2vw,16px)',
-      gap: 'clamp(4px,1vh,8px)',
+    <div className="glass-widget h-full flex flex-col" style={{
+      borderRadius: '14px 14px 14px 26px',
+      padding: '6px 9px 7px',
+      gap: '4px',
+      minHeight: 0,
+      overflow: 'hidden',
     }}>
-      <div style={{ fontSize: 'clamp(7px,1.1vh,9px)', fontWeight: 700, color: '#48484a', textTransform: 'uppercase', letterSpacing: '0.1em', flexShrink: 0 }}>
+      <div style={{ fontSize: 'clamp(6px,0.85vh,7.6px)', fontWeight: 800, color: '#48484a', textTransform: 'uppercase', letterSpacing: '0.1em', flexShrink: 0, lineHeight: 1 }}>
         Saúde do Hub
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', flexShrink: 0 }}>
-        <BatteryGauge pct={batteryPct} />
-        <div style={{ paddingBottom: '6px' }}>
-          <div style={{ fontSize: 'clamp(9px,1.5vh,12px)', fontWeight: 700, color: GREEN, lineHeight: 1.2 }}>Bateria</div>
-          <div style={{ fontSize: 'clamp(7px,1.1vh,9px)', color: '#636366' }}>{batteryStatus}</div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 0.9fr', alignItems: 'end', gap: '6px', flexShrink: 0, minHeight: 0 }}>
+        <Gauge
+          id="hub-battery-gauge"
+          label="Bateria"
+          value={batteryPct}
+          display={`${batteryPct}%`}
+          from="#37db00"
+          to="#BCFF00"
+          textColor="#BCFF00"
+        />
+        <Gauge
+          id="hub-temp-gauge"
+          label="Temp Bat"
+          value={tempValue}
+          display={batteryTemp != null ? `${batteryTemp}°` : '--'}
+          from={tempPalette.from}
+          to={tempPalette.to}
+          textColor={tempPalette.text}
+        />
+        <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', paddingBottom: '1px', overflow: 'hidden' }}>
+          <WifiBars rssi={hub?.wifi.rssi} />
+          <div style={{ marginTop: '6px', maxWidth: '100%', fontSize: 'clamp(6.4px,0.9vh,8px)', color: '#64D2FF', fontWeight: 850, lineHeight: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {wifiLabel}
+          </div>
         </div>
       </div>
 
-      <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)', flexShrink: 0 }} />
+      <span style={{
+        display: 'block',
+        height: '1px',
+        background: 'rgba(255,255,255,0.08)',
+        margin: '2px 0',
+        flexShrink: 0,
+      }} />
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-around', minHeight: 0 }}>
-        <Row icon={<Thermometer size={10} />} label="Bat"   value={batTemp} />
-        <Row icon={<Cpu         size={10} />} label="CPU"   value={cpuTemp} />
-        <Row icon={<Wifi        size={10} />} label="Wi-Fi" value={wifiVal} />
+      <div style={{
+        flex: 1,
+        minHeight: 0,
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gridTemplateRows: 'minmax(0, 1fr) minmax(0, 1fr)',
+        gap: '5px',
+        overflow: 'hidden',
+      }}>
+        <InfoCard label="Carga" value={batteryStatus} color={batteryStatusColor(hub?.battery.status, hub?.battery.inputSuspended)} />
+        <InfoCard label="CPU" value={hub ? `${hub.cpuUsage ?? 0}% / ${hub.cpuTemp}°` : '--'} color={hub ? (tempColor(hub.cpuTemp) === GREEN ? statusColor(hub.cpuUsage) : tempColor(hub.cpuTemp)) : '#86868b'} />
+        <InfoCard label="RAM" value={hub?.memoryUsedGb != null ? `${hub.memory}% / ${hub.memoryUsedGb.toFixed(1)}GB` : '--'} color={statusColor(hub?.memory, 75, 90)} />
+        <InfoCard label="Tela" value={`${screen} / ${uptime}`} color={GREEN} />
       </div>
     </div>
   );

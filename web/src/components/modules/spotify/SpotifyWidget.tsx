@@ -29,6 +29,7 @@ type SpotifyWidgetProps = {
 
 export function SpotifyWidget({ isExpanded = false, onToggleExpanded }: SpotifyWidgetProps) {
   const spotify = useDashboardStore((s) => s.state.spotify);
+  const widgetRadius = isExpanded ? '14px' : '14px 32px 14px 14px';
 
   const [optimisticPlaying, setOptimisticPlaying] = useState<boolean | null>(null);
   const [pendingTrackAction, setPendingTrackAction] = useState<'next' | 'prev' | null>(null);
@@ -105,8 +106,8 @@ export function SpotifyWidget({ isExpanded = false, onToggleExpanded }: SpotifyW
 
   if (!displayTrack.track) {
     return (
-      <div className={`spotify-widget rounded-[14px] h-full flex items-center justify-center ${isExpanded ? 'is-expanded' : ''}`}
-        style={{ background: 'linear-gradient(145deg, #0d2b1a 0%, #0a1f13 100%)' }}>
+      <div className={`spotify-widget h-full relative overflow-hidden flex items-center justify-center ${isExpanded ? 'is-expanded' : ''}`}
+        style={{ borderRadius: widgetRadius, background: 'linear-gradient(145deg, #0d2b1a 0%, #0a1f13 100%)' }}>
         <button
           className="spotify-expand-button"
           onClick={onToggleExpanded}
@@ -138,8 +139,8 @@ export function SpotifyWidget({ isExpanded = false, onToggleExpanded }: SpotifyW
 
   return (
     <div
-      className={`spotify-widget rounded-[14px] h-full relative overflow-hidden flex items-center ${isExpanded ? 'is-expanded' : ''}`}
-      style={{ padding: isExpanded ? 'clamp(18px,5vh,32px) clamp(20px,6vw,52px)' : 'clamp(10px,2.5vh,16px) clamp(10px,1.5vw,14px)', gap: isExpanded ? 'clamp(18px,5vw,48px)' : 'clamp(8px,1.5vw,12px)' }}
+      className={`spotify-widget h-full relative overflow-hidden flex items-center ${isExpanded ? 'is-expanded' : ''}`}
+      style={{ borderRadius: widgetRadius, padding: isExpanded ? 'clamp(18px,5vh,32px) clamp(20px,6vw,52px)' : 'clamp(10px,2.5vh,16px) clamp(10px,1.5vw,14px)', gap: isExpanded ? 'clamp(18px,5vw,48px)' : 'clamp(8px,1.5vw,12px)' }}
     >
 
       {/* Fundo: capa desfocada */}
