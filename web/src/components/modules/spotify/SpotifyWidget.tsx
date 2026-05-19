@@ -37,6 +37,9 @@ export function SpotifyWidget({ isExpanded = false, onToggleExpanded }: SpotifyW
   const [remainingQueue, setRemainingQueue] = useState<SpotifyQueueItem[]>(
     () => spotify?.queue ?? []
   );
+  const [resumeLoading, setResumeLoading] = useState(false);
+  const waitingForResumeUpdate = useRef(false);
+  const resumeLoadingTimer = useRef<number | null>(null);
 
   const displayPlaying = optimisticPlaying !== null ? optimisticPlaying : (spotify?.isPlaying ?? false);
 
@@ -47,6 +50,40 @@ export function SpotifyWidget({ isExpanded = false, onToggleExpanded }: SpotifyW
       progressAnchor.current = { ms: spotify.progressMs ?? 0, at: Date.now(), playing: spotify.isPlaying };
     }
   }, [spotify?.progressMs, spotify?.isPlaying]);
+
+  useEffect(() => {
+    function handleVisibilityChange() {
+      if (document.visibilityState !== 'visible') return;
+
+      if (resumeLoadingTimer.current !== null) {
+        window.clearTimeout(resumeLoadingTimer.current);
+      }
+      waitingForResumeUpdate.current = true;
+      setResumeLoading(true);
+      resumeLoadingTimer.current = window.setTimeout(() => {
+        waitingForResumeUpdate.current = false;
+        setResumeLoading(false);
+      }, 5_000);
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      if (resumeLoadingTimer.current !== null) {
+        window.clearTimeout(resumeLoadingTimer.current);
+      }
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!waitingForResumeUpdate.current) return;
+    if (resumeLoadingTimer.current !== null) {
+      window.clearTimeout(resumeLoadingTimer.current);
+      resumeLoadingTimer.current = null;
+    }
+    waitingForResumeUpdate.current = false;
+    setResumeLoading(false);
+  }, [spotify?.updatedAt]);
 
   // Força re-renders a cada 250ms — liveProgressMs calculado no próprio render (sem state)
   const [, tick] = useReducer(n => n + 1, 0);
@@ -103,6 +140,26 @@ export function SpotifyWidget({ isExpanded = false, onToggleExpanded }: SpotifyW
     spotifyControl('prev');
     setTimeout(() => setPendingTrackAction(null), 900);
   }, []);
+
+  if (resumeLoading) {
+    return (
+      <div className={`spotify-widget h-full relative overflow-hidden flex items-center justify-center ${isExpanded ? 'is-expanded' : ''}`}
+        style={{ borderRadius: widgetRadius, background: 'linear-gradient(145deg, #0d2b1a 0%, #0a1f13 100%)' }}>
+        <button
+          className="spotify-expand-button"
+          onClick={onToggleExpanded}
+          aria-label={isExpanded ? 'Sair da tela cheia do Spotify' : 'Expandir Spotify'}
+          type="button"
+        >
+          {isExpanded ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+        </button>
+        <div className="flex flex-col items-center gap-[8px]">
+          <Music2 size={32} color="#1db954" style={{ opacity: 0.6 }} />
+          <span className="text-[11px] text-cool-gray">Atualizando</span>
+        </div>
+      </div>
+    );
+  }
 
   if (!displayTrack.track) {
     return (

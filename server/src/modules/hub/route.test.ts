@@ -5,10 +5,11 @@ import { registerHubRoute } from './route.js';
 describe('POST /hub-health', () => {
   const updateState = vi.fn();
   const broadcast = vi.fn();
+  const chargeControl = { handle: vi.fn() };
 
   async function buildApp() {
     const app = Fastify();
-    await registerHubRoute(app, { updateState, broadcast });
+    await registerHubRoute(app, { updateState, broadcast, chargeControl });
     return app;
   }
 
@@ -87,5 +88,15 @@ describe('POST /hub-health', () => {
       event: 'hub:update',
       data: { hub: validPayload },
     });
+  });
+
+  it('aciona controle de carga com payload valido', async () => {
+    const app = await buildApp();
+    await app.inject({
+      method: 'POST', url: '/hub-health',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(validPayload),
+    });
+    expect(chargeControl.handle).toHaveBeenCalledWith(validPayload);
   });
 });

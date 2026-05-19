@@ -6,6 +6,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 config({ path: resolve(__dirname, '../../.env') });
 import { buildServer } from './server.js';
 import { startRegistry } from './registry.js';
+import { getState } from './state.js';
+import { startTelemetry } from './telemetry/logger.js';
 
 const PORT = Number(process.env.PORT) || 3333;
 
@@ -14,3 +16,4 @@ await app.listen({ port: PORT, host: '0.0.0.0' });
 console.log(`DroidMeter rodando na porta ${PORT}`);
 
 await startRegistry();
+startTelemetry(getState);

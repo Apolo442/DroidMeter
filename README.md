@@ -45,9 +45,9 @@ O Fastify concentra os workers de dados, atualiza o estado compartilhado no back
 - Dashboard calibrado para viewport `851 x 393` em landscape.
 - Widget de clima com modos visuais para dia, noite e chuvoso/nublado.
 - Widget Spotify com capa, progresso e controles play/pause/next/previous.
-- Widget Sistema com RAM, CPU e GPU em gauges semicirculares.
-- Métricas de CPU/GPU com temperatura e RAM usada em GB.
-- Hub Health mockado para bateria, temperatura, tela e Wi-Fi.
+- Hub Health com dados reais do Redmi: bateria, temperatura, carga suspensa, tela, CPU/RAM e Wi-Fi.
+- Controle automático de carga via SSH/root com thresholds de bateria e temperatura.
+- Painel estilo iOS Control Center com atalhos para idle/screen saver, auto sleep, brilho, kiosk/orientação, diagnóstico e carga.
 - WebSocket com hostname dinâmico para acessar pelo IP do PC no celular.
 - Fonte SF Pro Text self-hosted e visual inspirado em widgets iOS.
 
@@ -163,9 +163,9 @@ Fastify owns the data workers, updates the shared backend state, and broadcasts 
 - Dashboard calibrated for a `851 x 393` landscape viewport.
 - Weather widget with day, night, and cloudy/rainy visual modes.
 - Spotify widget with album art, progress, and play/pause/next/previous controls.
-- System widget with RAM, CPU, and GPU semicircular gauges.
-- CPU/GPU temperatures and RAM usage in GB.
-- Mocked Hub Health widget for battery, temperature, screen, and Wi-Fi.
+- Hub Health with real Redmi data: battery, temperature, suspended charging, screen, CPU/RAM, and Wi-Fi.
+- Automatic charging control over SSH/root with battery and temperature thresholds.
+- iOS Control Center-style panel with shortcuts for idle/screen saver, auto sleep, brightness, kiosk/orientation, diagnostics, and charging.
 - Dynamic WebSocket hostname so the phone can connect through the PC local IP.
 - Self-hosted SF Pro Text font and iOS-widget-inspired visuals.
 

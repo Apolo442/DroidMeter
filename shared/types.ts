@@ -63,6 +63,9 @@ export type HubState = {
     plugged: 'ac' | 'usb' | 'wireless' | 'unplugged';
     temperature: number;
     inputSuspended?: boolean;
+    usbPresent?: boolean;
+    usbOnline?: boolean;
+    usbVoltageMv?: number;
   };
   wifi: {
     rssi: number;

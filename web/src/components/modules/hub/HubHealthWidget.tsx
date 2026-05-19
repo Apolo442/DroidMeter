@@ -2,7 +2,7 @@
 import { useDashboardStore } from '@/lib/store';
 
 const ARC_LEN = 100.53;
-const ARC_PATH = 'M 8,46 A 32,32 0 0,1 72,46';
+const ARC_PATH = 'M 6,46 A 34,34 0 0,1 74,46';
 const GREEN = '#30d158';
 
 const STATUS_LABEL: Record<string, string> = {
@@ -53,7 +53,7 @@ function Gauge({
 
   return (
     <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div style={{ width: '100%', maxWidth: '82px' }}>
+      <div style={{ width: '100%', maxWidth: '90px' }}>
         <svg viewBox="0 0 80 54" style={{ width: '100%', display: 'block' }}>
           <defs>
             <linearGradient id={id} x1="0%" y1="0%" x2="100%" y2="0%">
@@ -113,8 +113,8 @@ function statusColor(value?: number, warn = 70, danger = 85) {
 
 function tempColor(temp?: number) {
   if (temp == null) return '#86868b';
-  if (temp >= 42) return '#ff453a';
-  if (temp >= 38) return '#ffd60a';
+  if (temp > 70) return '#ff453a';
+  if (temp > 60) return '#ffd60a';
   return GREEN;
 }
 
@@ -208,9 +208,9 @@ export function HubHealthWidget() {
           to={tempPalette.to}
           textColor={tempPalette.text}
         />
-        <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', paddingBottom: '1px', overflow: 'hidden' }}>
+        <div style={{ minWidth: 0, height: '54px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', paddingBottom: '7px', overflow: 'hidden' }}>
           <WifiBars rssi={hub?.wifi.rssi} />
-          <div style={{ marginTop: '6px', maxWidth: '100%', fontSize: 'clamp(6.4px,0.9vh,8px)', color: '#64D2FF', fontWeight: 850, lineHeight: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          <div style={{ marginTop: '4px', maxWidth: '100%', fontSize: 'clamp(6.2px,0.86vh,7.7px)', color: '#64D2FF', fontWeight: 850, lineHeight: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {wifiLabel}
           </div>
         </div>

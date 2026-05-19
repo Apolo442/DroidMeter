@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import { CalibrationRuler } from '@/components/CalibrationRuler';
 
 export const metadata: Metadata = { title: 'DroidMeter' };
 

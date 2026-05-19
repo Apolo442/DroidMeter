@@ -3,6 +3,8 @@ import fastifyWebsocket from '@fastify/websocket';
 import type { WebSocket } from '@fastify/websocket';
 import { getState, updateState } from './state.js';
 import { registerHubRoute } from './modules/hub/route.js';
+import { registerScreenRoute } from './modules/hub/screen-route.js';
+import { registerDeviceActionsRoute } from './modules/hub/device-actions-route.js';
 import { WS_EVENTS } from '@shared/types.js';
 import type { WsMessage } from '@shared/types.js';
 
@@ -28,6 +30,8 @@ export async function buildServer() {
   app.get('/health', async () => ({ ok: true, clients: clients.size }));
 
   await registerHubRoute(app, { updateState, broadcast });
+  await registerScreenRoute(app);
+  await registerDeviceActionsRoute(app);
 
   return app;
 }
