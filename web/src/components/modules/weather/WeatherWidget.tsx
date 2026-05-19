@@ -11,11 +11,11 @@ type WmoInfo = { Icon: LucideIcon; color: string; label: string };
 type WeatherMode = 'day' | 'night' | 'cloudy';
 
 const WEATHER_BACKGROUNDS: Record<WeatherMode, string> = {
-  day: 'linear-gradient(180deg, #1b3d6b 0%, #2e6db4 55%, #5499d8 100%)',
-  night: 'linear-gradient(180deg, #020518 0%, #283555 100%)',
-  cloudy: 'linear-gradient(180deg, #4D5E70 0%, #657688 100%)',
+  day: 'linear-gradient(180deg, #183152 0%, #255381 55%, #3c7298 100%)',
+  night: 'linear-gradient(180deg, #02040f 0%, #1c263d 100%)',
+  cloudy: 'linear-gradient(180deg, #3b4855 0%, #53616d 100%)',
 };
-const CORNER_REFRESH_GRAY = 'rgba(255,255,255,0.32)';
+const CORNER_REFRESH_GRAY = 'rgba(255,255,255,0.18)';
 
 function ReloadButton() {
   return (
@@ -82,22 +82,22 @@ function weatherMode(code: number, night: boolean): WeatherMode {
 }
 
 function wmoInfo(code: number, night = false): WmoInfo {
-  const neutral = night ? '#ffffff' : '#ffffff';
-  const rain = night ? '#dbeafe' : '#cde9ff';
+  const neutral = 'rgba(245,245,247,0.72)';
+  const rain = night ? '#aabdd0' : '#a8c9dc';
 
   if (code === 0)  return night
-    ? { Icon: Moon,     color: '#ffffff', label: 'Limpo' }
-    : { Icon: Sun,      color: '#FFD60A', label: 'Ensolarado' };
+    ? { Icon: Moon,     color: neutral, label: 'Limpo' }
+    : { Icon: Sun,      color: '#c9ae2a', label: 'Ensolarado' };
   if (code <= 2)   return night
-    ? { Icon: CloudMoon, color: '#ffffff', label: 'Parcialmente nublado' }
-    : { Icon: CloudSun,  color: '#FFD60A', label: 'Parcialmente nublado' };
+    ? { Icon: CloudMoon, color: neutral, label: 'Parcialmente nublado' }
+    : { Icon: CloudSun,  color: '#c9ae2a', label: 'Parcialmente nublado' };
   if (code === 3)  return { Icon: Cloud,        color: neutral, label: 'Nublado' };
   if (code <= 48)  return { Icon: CloudFog,     color: '#c0c0c0', label: 'Neblina' };
   if (code <= 55)  return { Icon: night ? CloudMoonRain : CloudDrizzle, color: rain, label: 'Garoa' };
   if (code <= 65)  return { Icon: night ? CloudMoonRain : CloudRain,    color: rain, label: 'Chuvoso' };
-  if (code <= 75)  return { Icon: CloudSnow,    color: '#ffffff', label: 'Neve' };
+  if (code <= 75)  return { Icon: CloudSnow,    color: neutral, label: 'Neve' };
   if (code <= 82)  return { Icon: night ? CloudMoonRain : CloudRain,    color: rain, label: 'Chuva forte' };
-  return             { Icon: CloudLightning,    color: '#FFD60A', label: 'Tempestade' };
+  return             { Icon: CloudLightning,    color: '#c9ae2a', label: 'Tempestade' };
 }
 
 export function WeatherWidget() {
@@ -109,7 +109,7 @@ export function WeatherWidget() {
     position: 'relative',
     background: WEATHER_BACKGROUNDS.day,
     border: '1px solid rgba(0,0,0,0.16)',
-    boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.025)',
+    boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.015)',
   } as const;
 
   if (!weather) {
@@ -147,7 +147,7 @@ export function WeatherWidget() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '0', flexShrink: 0, height: '100%' }}>
           <div data-testid="weather-temp" style={{
             fontSize: 'clamp(34px,11vh,58px)', fontWeight: 200,
-            color: '#ffffff', lineHeight: 1, letterSpacing: '-3px', flexShrink: 0,
+            color: 'rgba(245,245,247,0.74)', lineHeight: 1, letterSpacing: 0, flexShrink: 0,
           }}>
             {Math.round(weather.temperature)}°
           </div>
@@ -155,14 +155,14 @@ export function WeatherWidget() {
           {/* Divisor vertical sutil */}
           <div style={{
             width: '1px', height: '36px',
-            background: 'rgba(255,255,255,0.18)',
+            background: 'rgba(255,255,255,0.1)',
             margin: '0 12px', flexShrink: 0,
           }} />
 
           {/* Cidade centralizada verticalmente */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
-            <MapPin size={13} color="rgba(255,255,255,0.6)" />
-            <span style={{ fontSize: 'clamp(13px,2.2vh,17px)', fontWeight: 500, color: '#ffffff', whiteSpace: 'nowrap' }}>
+            <MapPin size={13} color="rgba(255,255,255,0.42)" />
+            <span style={{ fontSize: 'clamp(13px,2.2vh,17px)', fontWeight: 500, color: 'rgba(245,245,247,0.72)', whiteSpace: 'nowrap' }}>
               Feira de Santana
             </span>
           </div>
@@ -172,11 +172,11 @@ export function WeatherWidget() {
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'space-between', height: '100%' }}>
           <CondIcon size={32} color={condColor} />
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 'clamp(2px,0.6vh,4px)' }}>
-            <span style={{ fontSize: 'clamp(10px,1.8vh,13px)', fontWeight: 500, color: '#ffffff' }}>
+            <span style={{ fontSize: 'clamp(10px,1.8vh,13px)', fontWeight: 500, color: 'rgba(245,245,247,0.7)' }}>
               {condLabel}
             </span>
             {tempMax != null && tempMin != null && (
-              <span style={{ fontSize: 'clamp(9px,1.5vh,12px)', fontWeight: 500, color: 'rgba(255,255,255,0.85)' }}>
+              <span style={{ fontSize: 'clamp(9px,1.5vh,12px)', fontWeight: 500, color: 'rgba(255,255,255,0.58)' }}>
                 Max: {Math.round(tempMax)}° Mín: {Math.round(tempMin)}°
               </span>
             )}
@@ -187,7 +187,7 @@ export function WeatherWidget() {
       {/* ── DIVISOR ── */}
       <div style={{
         height: '1px',
-        background: 'rgba(255,255,255,0.22)',
+        background: 'rgba(255,255,255,0.11)',
         margin: 'clamp(10px,2.2vh,14px) 0',
         flexShrink: 0,
       }} />
@@ -208,7 +208,7 @@ export function WeatherWidget() {
               <span style={{
                 fontSize: 'clamp(9px,1.6vh,12px)',
                 fontWeight: 400,
-                color: 'rgba(255,255,255,0.7)',
+                color: 'rgba(255,255,255,0.48)',
               }}>
                 {h.time}
               </span>
@@ -216,7 +216,7 @@ export function WeatherWidget() {
               <span style={{
                 fontSize: 'clamp(12px,2vh,15px)',
                 fontWeight: 500,
-                color: '#ffffff',
+                color: 'rgba(245,245,247,0.68)',
               }}>
                 {Math.round(h.temp)}°
               </span>

@@ -17,12 +17,13 @@ import {
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { runDeviceAction } from '@/lib/device-actions';
-import { sleepScreen } from '@/lib/screen';
+import { markManualSleepWakePending, sleepScreen } from '@/lib/screen';
 import { useDashboardStore } from '@/lib/store';
 
-const STORAGE_KEY = 'droidmeter.controlPanel';
-const SCREEN_SAVER_IDLE_MS = 60_000;
-const AUTO_SLEEP_IDLE_MS = 180_000;
+const STORAGE_KEY = 'droidmeter.controlPanel.v2';
+const HARDWARE_DIM_IDLE_MS = 20_000;
+const SCREEN_SAVER_IDLE_MS = 35_000;
+const AUTO_SLEEP_IDLE_MS = 150_000;
 
 export type ControlPanelSettings = {
   idleScreenSaver: boolean;
@@ -36,14 +37,14 @@ export type ControlPanelSettings = {
 };
 
 const DEFAULT_SETTINGS: ControlPanelSettings = {
-  idleScreenSaver: false,
-  autoSleep: false,
-  nightMode: false,
-  economyMode: false,
+  idleScreenSaver: true,
+  autoSleep: true,
+  nightMode: true,
+  economyMode: true,
   diagnosticMode: false,
-  neutralTheme: false,
+  neutralTheme: true,
   autoKiosk: true,
-  brightness: 50,
+  brightness: 35,
 };
 
 type Props = {
@@ -136,7 +137,9 @@ export function ControlPanel({ onSettingsChange }: Props) {
   const [screenSaverVisible, setScreenSaverVisible] = useState(false);
   const [busyAction, setBusyAction] = useState<string | null>(null);
   const idleTimer = useRef<number | null>(null);
+  const dimTimer = useRef<number | null>(null);
   const sleepTimer = useRef<number | null>(null);
+  const hardwareDimmed = useRef(false);
   const syncedAutoKiosk = useRef(false);
 
   useEffect(() => {
@@ -162,14 +165,29 @@ export function ControlPanel({ onSettingsChange }: Props) {
   };
 
   useEffect(() => {
+    const screenProtectionEnabled = settings.idleScreenSaver || settings.autoSleep;
+
     function clearTimers() {
       if (idleTimer.current) window.clearTimeout(idleTimer.current);
+      if (dimTimer.current) window.clearTimeout(dimTimer.current);
       if (sleepTimer.current) window.clearTimeout(sleepTimer.current);
     }
 
     function schedule() {
       clearTimers();
       setScreenSaverVisible(false);
+
+      if (hardwareDimmed.current) {
+        hardwareDimmed.current = false;
+        void runDeviceAction('brightness', settings.brightness).catch(() => {});
+      }
+
+      if (screenProtectionEnabled && settings.brightness > 8) {
+        dimTimer.current = window.setTimeout(() => {
+          hardwareDimmed.current = true;
+          void runDeviceAction('brightness', 8).catch(() => {});
+        }, HARDWARE_DIM_IDLE_MS);
+      }
 
       if (settings.idleScreenSaver) {
         idleTimer.current = window.setTimeout(() => {
@@ -195,9 +213,9 @@ export function ControlPanel({ onSettingsChange }: Props) {
       clearTimers();
       events.forEach((event) => window.removeEventListener(event, schedule));
     };
-  }, [settings.autoSleep, settings.idleScreenSaver]);
+  }, [settings.autoSleep, settings.brightness, settings.idleScreenSaver]);
 
-  const brightnessOptions = useMemo(() => [15, 35, 60, 100], []);
+  const brightnessOptions = useMemo(() => [8, 15, 35, 60], []);
 
   async function execute(action: string, run: () => Promise<void>) {
     setBusyAction(action);
@@ -246,7 +264,7 @@ export function ControlPanel({ onSettingsChange }: Props) {
                 active={settings.idleScreenSaver}
                 icon={Moon}
                 label="Idle"
-                detail="protege tela"
+                detail="35s"
                 tone="blue"
                 onClick={() => applySettings({ idleScreenSaver: !settings.idleScreenSaver })}
               />
@@ -254,7 +272,7 @@ export function ControlPanel({ onSettingsChange }: Props) {
                 active={settings.autoSleep}
                 icon={Power}
                 label="Auto tela"
-                detail="dorme em 3 min"
+                detail="2m30s"
                 tone="orange"
                 onClick={() => applySettings({ autoSleep: !settings.autoSleep })}
               />
@@ -352,7 +370,10 @@ export function ControlPanel({ onSettingsChange }: Props) {
             <button
               type="button"
               className="control-round"
-              onClick={() => void execute('sleep_now', () => sleepScreen())}
+              onClick={() => {
+                markManualSleepWakePending();
+                void execute('sleep_now', () => sleepScreen());
+              }}
               aria-label="Dormir tela agora"
             >
               <Zap size={25} strokeWidth={2.5} />

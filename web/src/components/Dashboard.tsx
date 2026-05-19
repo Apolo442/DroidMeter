@@ -11,20 +11,44 @@ import { OrientationGuard } from './OrientationGuard';
 import { WakeAnimation }    from './WakeAnimation';
 import { ControlPanel, type ControlPanelSettings } from './ControlPanel';
 
+const BURN_IN_DIM_IDLE_MS = 20_000;
+
 export function Dashboard() {
   const [spotifyExpanded, setSpotifyExpanded] = useState(false);
   const [controlSettings, setControlSettings] = useState<ControlPanelSettings | null>(null);
+  const [burnInDimmed, setBurnInDimmed] = useState(false);
   const handleControlSettings = useCallback((settings: ControlPanelSettings) => {
     setControlSettings(settings);
   }, []);
 
   useEffect(() => { initWebSocket(); }, []);
 
+  useEffect(() => {
+    let dimTimer: number | null = null;
+
+    function scheduleDim() {
+      if (dimTimer) window.clearTimeout(dimTimer);
+      setBurnInDimmed(false);
+      dimTimer = window.setTimeout(() => setBurnInDimmed(true), BURN_IN_DIM_IDLE_MS);
+    }
+
+    const events = ['pointerdown', 'keydown', 'touchstart', 'visibilitychange'];
+    events.forEach((event) => window.addEventListener(event, scheduleDim, { passive: true }));
+    scheduleDim();
+
+    return () => {
+      if (dimTimer) window.clearTimeout(dimTimer);
+      events.forEach((event) => window.removeEventListener(event, scheduleDim));
+    };
+  }, []);
+
   const shellClasses = [
     'dashboard-shell',
+    'burn-in-protected',
     'w-screen',
     'h-screen',
     spotifyExpanded ? 'spotify-expanded' : '',
+    burnInDimmed && !spotifyExpanded && (controlSettings?.idleScreenSaver || controlSettings?.autoSleep) ? 'burn-in-dimmed' : '',
     controlSettings?.nightMode ? 'control-night-mode' : '',
     controlSettings?.economyMode ? 'control-economy-mode' : '',
     controlSettings?.neutralTheme ? 'control-neutral-theme' : '',

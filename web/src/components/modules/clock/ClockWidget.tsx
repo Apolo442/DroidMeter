@@ -33,7 +33,7 @@ export function ClockWidget() {
   const cells = buildCalendar(now.getFullYear(), now.getMonth());
   const today = now.getDate();
 
-  const RED = '#FF3B30';
+  const RED = 'rgba(255, 69, 58, 0.72)';
   const cameraCutoutMask = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath fill='white' d='M0 0 H100 V100 H17 C12 100 10 98 10 94 V81 C10 78 8 76 5 76 H5 C2 76 0 73 0 70 Z'/%3E%3C/svg%3E")`;
 
   return (
@@ -67,7 +67,7 @@ export function ClockWidget() {
           data-testid="clock-time"
           style={{
             fontSize: 'clamp(32px,11vh,52px)', fontWeight: 200,
-            color: '#f5f5f7', lineHeight: 1, letterSpacing: '-2px',
+            color: 'rgba(245,245,247,0.72)', lineHeight: 1, letterSpacing: 0,
             fontVariantNumeric: 'tabular-nums',
           }}
         >
@@ -85,7 +85,7 @@ export function ClockWidget() {
 
       {/* Divisor */}
       <div style={{
-        height: '1px', background: 'rgba(255,255,255,0.08)',
+        height: '1px', background: 'rgba(255,255,255,0.04)',
         margin: 'clamp(6px,1.5vh,10px) 0', flexShrink: 0,
       }} />
 
@@ -106,7 +106,7 @@ export function ClockWidget() {
           {DOW.map((d, i) => (
             <div key={i} style={{
               fontSize: 'clamp(6px,0.95vh,8px)', fontWeight: 600, textAlign: 'center',
-              color: i === 0 || i === 6 ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.35)',
+              color: i === 0 || i === 6 ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.25)',
               paddingBottom: '2px',
             }}>
               {d}
@@ -143,7 +143,7 @@ export function ClockWidget() {
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: 'clamp(6px,1vh,9px)', fontWeight: isToday ? 700 : 500,
                     background: isToday ? RED : 'transparent',
-                    color: isToday ? '#fff' : isWeekend ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.8)',
+                    color: isToday ? 'rgba(255,255,255,0.78)' : isWeekend ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.58)',
                   }}>
                     {day}
                   </div>

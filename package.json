@@ -3,6 +3,7 @@
   "private": true,
   "scripts": {
     "droidmeter": "bash scripts/droidmeter.sh",
+    "autostart:install": "bash scripts/install-autostart.sh",
     "ssh": "ssh -p 8022 u0_a160@192.168.15.73",
     "dev:server": "npm run dev --workspace=server",
     "dev:web": "npm run dev --workspace=web",

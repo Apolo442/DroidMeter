@@ -1,18 +1,34 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { consumeManualSleepWakePending } from '@/lib/screen';
 
 function useWakeTrigger() {
   const [tick, setTick] = useState(0);
+
   useEffect(() => {
     let ready = false;
-    const t = setTimeout(() => { ready = true; }, 800);
+    const trigger = () => setTick(n => n + 1);
+    const t = setTimeout(() => {
+      ready = true;
+      if (consumeManualSleepWakePending() && document.visibilityState === 'visible') {
+        trigger();
+      }
+    }, 800);
+
     function onVisibility() {
-      if (ready && document.visibilityState === 'visible') setTick(n => n + 1);
+      if (document.visibilityState !== 'visible') return;
+      if (consumeManualSleepWakePending()) {
+        window.setTimeout(trigger, 120);
+        return;
+      }
+      if (ready) trigger();
     }
+
     document.addEventListener('visibilitychange', onVisibility);
     return () => { clearTimeout(t); document.removeEventListener('visibilitychange', onVisibility); };
   }, []);
+
   return tick;
 }
 

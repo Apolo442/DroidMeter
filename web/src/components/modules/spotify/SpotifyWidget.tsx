@@ -144,7 +144,7 @@ export function SpotifyWidget({ isExpanded = false, onToggleExpanded }: SpotifyW
   if (resumeLoading) {
     return (
       <div className={`spotify-widget h-full relative overflow-hidden flex items-center justify-center ${isExpanded ? 'is-expanded' : ''}`}
-        style={{ borderRadius: widgetRadius, background: 'linear-gradient(145deg, #0d2b1a 0%, #0a1f13 100%)' }}>
+        style={{ borderRadius: widgetRadius, background: 'linear-gradient(145deg, #0a1f13 0%, #07150d 100%)' }}>
         <button
           className="spotify-expand-button"
           onClick={onToggleExpanded}
@@ -154,7 +154,7 @@ export function SpotifyWidget({ isExpanded = false, onToggleExpanded }: SpotifyW
           {isExpanded ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
         </button>
         <div className="flex flex-col items-center gap-[8px]">
-          <Music2 size={32} color="#1db954" style={{ opacity: 0.6 }} />
+          <Music2 size={32} color="#2fa84d" style={{ opacity: 0.42 }} />
           <span className="text-[11px] text-cool-gray">Atualizando</span>
         </div>
       </div>
@@ -164,7 +164,7 @@ export function SpotifyWidget({ isExpanded = false, onToggleExpanded }: SpotifyW
   if (!displayTrack.track) {
     return (
       <div className={`spotify-widget h-full relative overflow-hidden flex items-center justify-center ${isExpanded ? 'is-expanded' : ''}`}
-        style={{ borderRadius: widgetRadius, background: 'linear-gradient(145deg, #0d2b1a 0%, #0a1f13 100%)' }}>
+        style={{ borderRadius: widgetRadius, background: 'linear-gradient(145deg, #0a1f13 0%, #07150d 100%)' }}>
         <button
           className="spotify-expand-button"
           onClick={onToggleExpanded}
@@ -174,7 +174,7 @@ export function SpotifyWidget({ isExpanded = false, onToggleExpanded }: SpotifyW
           {isExpanded ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
         </button>
         <div className="flex flex-col items-center gap-[8px]">
-          <Music2 size={32} color="#1db954" style={{ opacity: 0.6 }} />
+          <Music2 size={32} color="#2fa84d" style={{ opacity: 0.42 }} />
           <span className="text-[11px] text-cool-gray">Nada tocando</span>
         </div>
       </div>
@@ -189,7 +189,7 @@ export function SpotifyWidget({ isExpanded = false, onToggleExpanded }: SpotifyW
     background: 'none', border: 'none', cursor: 'pointer',
     padding: '4px', display: 'flex', alignItems: 'center',
     justifyContent: 'center', borderRadius: '50%',
-    color: 'rgba(255,255,255,0.85)',
+    color: 'rgba(245,245,247,0.72)',
   };
 
   const coverSz = isExpanded ? 'clamp(150px,48vh,270px)' : 'clamp(90px,23vh,140px)';
@@ -209,7 +209,7 @@ export function SpotifyWidget({ isExpanded = false, onToggleExpanded }: SpotifyW
           filter: 'blur(4px)', transform: 'scale(1.02)', zIndex: 0,
         }} />
       )}
-      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.58)', zIndex: 1 }} />
+      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.68)', zIndex: 1 }} />
       <div className="spotify-vignette" />
 
       <button
@@ -230,8 +230,8 @@ export function SpotifyWidget({ isExpanded = false, onToggleExpanded }: SpotifyW
             boxShadow: isExpanded ? '0 20px 70px rgba(0,0,0,0.65)' : '0 8px 28px rgba(0,0,0,0.55)',
           }} />
         ) : (
-          <div style={{ width: coverSz, height: coverSz, borderRadius: '10px', background: 'linear-gradient(135deg,#1db954,#0a4d22)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Music2 size={28} color="#fff" />
+          <div style={{ width: coverSz, height: coverSz, borderRadius: '10px', background: 'linear-gradient(135deg,#2fa84d,#0a3d1b)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Music2 size={28} color="rgba(245,245,247,0.72)" />
           </div>
         )}
       </div>
@@ -239,11 +239,11 @@ export function SpotifyWidget({ isExpanded = false, onToggleExpanded }: SpotifyW
       {/* Info + progresso + controles */}
       <div className="spotify-content" style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '2px', zIndex: 2 }}>
 
-        <div style={{ fontSize: isExpanded ? 'clamp(7px,1.8vh,11px)' : 'clamp(5px,0.9vh,7px)', fontWeight: 700, color: '#1db954', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+        <div style={{ fontSize: isExpanded ? 'clamp(7px,1.8vh,11px)' : 'clamp(5px,0.9vh,7px)', fontWeight: 700, color: '#2fa84d', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
           Tocando agora
         </div>
         <div data-testid="spotify-track"
-          style={{ fontSize: isExpanded ? 'clamp(22px,7vh,46px)' : 'clamp(10px,1.9vh,15px)', fontWeight: 600, color: '#f5f5f7', letterSpacing: '-0.2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          style={{ fontSize: isExpanded ? 'clamp(22px,7vh,46px)' : 'clamp(10px,1.9vh,15px)', fontWeight: 600, color: 'rgba(245,245,247,0.78)', letterSpacing: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
           {displayTrack.track}
         </div>
         <div data-testid="spotify-artist"
@@ -253,24 +253,24 @@ export function SpotifyWidget({ isExpanded = false, onToggleExpanded }: SpotifyW
 
         {/* Barra de progresso — loading animado durante estado otimista */}
         <div style={{ marginTop: isExpanded ? '18px' : '6px' }}>
-          <div style={{ position: 'relative', height: isExpanded ? '5px' : '3px', borderRadius: '999px', background: 'rgba(255,255,255,0.12)', overflow: 'hidden' }}>
+          <div style={{ position: 'relative', height: isExpanded ? '5px' : '3px', borderRadius: '999px', background: 'rgba(255,255,255,0.07)', overflow: 'hidden' }}>
             {optimisticTrack ? (
               <div style={{
                 position: 'absolute', inset: 0,
                 width: '40%',
-                background: 'linear-gradient(90deg, transparent, rgba(29,185,84,0.6), transparent)',
+                background: 'linear-gradient(90deg, transparent, rgba(47,168,77,0.42), transparent)',
                 animation: 'spotifyProgressPulse 1.2s ease-in-out infinite',
               }} />
             ) : (
               <>
-                <div key={displayTrack.track} style={{ height: '100%', borderRadius: '999px', width: `${pct}%`, background: '#1db954', transition: 'width 0.25s linear' }} />
+                <div key={displayTrack.track} style={{ height: '100%', borderRadius: '999px', width: `${pct}%`, background: '#2fa84d', transition: 'width 0.25s linear' }} />
                 <div style={{
                   position: 'absolute', top: '50%',
                   left: `${pct}%`,
                   transform: 'translate(-50%, -50%)',
                   width: isExpanded ? '11px' : '7px', height: isExpanded ? '11px' : '7px',
                   borderRadius: '50%',
-                  background: '#ffffff',
+                  background: 'rgba(245,245,247,0.72)',
                   boxShadow: '0 0 3px rgba(0,0,0,0.4)',
                 }} />
               </>
@@ -299,7 +299,7 @@ export function SpotifyWidget({ isExpanded = false, onToggleExpanded }: SpotifyW
             <SkipBack size={isExpanded ? 28 : 20} />
           </button>
           <button
-            style={{ ...btnStyle, background: 'rgba(255,255,255,0.14)', borderRadius: '50%', padding: isExpanded ? '15px' : '9px' }}
+            style={{ ...btnStyle, background: 'rgba(255,255,255,0.09)', borderRadius: '50%', padding: isExpanded ? '15px' : '9px' }}
             onClick={handlePlayPause}
             aria-label={displayPlaying ? 'Pausar' : 'Tocar'}
           >
