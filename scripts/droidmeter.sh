@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
 PHONE_USER="u0_a160"
 PHONE_HOST="192.168.15.73"
 PHONE_PORT="8022"
+PHONE_NORMAL_FLAG="$PROJECT_DIR/.droidmeter-phone-normal"
 
 HUB_PID=""
 SERVER_PID=""
@@ -16,12 +19,16 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 # Garante hub-health no celular sem duplicar o processo iniciado pelo Termux:Boot.
-if ssh -p "$PHONE_PORT" \
+# O modo normal do Redmi deixa uma trava local para impedir que o autostart do PC
+# volte a mexer no celular por SSH enquanto ele estiver emprestado/uso comum.
+if [ -f "$PHONE_NORMAL_FLAG" ]; then
+  echo "✓ Redmi em modo normal — não inicia hub-health nem automação no celular"
+elif ssh -p "$PHONE_PORT" \
        -o ConnectTimeout=3 \
        -o BatchMode=yes \
        -o StrictHostKeyChecking=no \
        "$PHONE_USER@$PHONE_HOST" \
-       'pgrep -f "[h]ub-health.sh" >/dev/null' &>/dev/null
+       'pgrep -f "^bash .*/hub-health\.sh$" >/dev/null' &>/dev/null
 then
   echo "✓ hub-health já está rodando no celular"
 elif ssh -p "$PHONE_PORT" \

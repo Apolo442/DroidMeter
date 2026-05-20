@@ -39,7 +39,7 @@ function brightnessToRaw(value: number) {
 
 function commandForAction(action: DeviceAction, value?: number) {
   if (action === 'charge_pause') {
-    return "su -c 'echo 1 > /sys/class/power_supply/battery/input_suspend'";
+    return ["D=/sys/class/dual_role_usb/otg_default; su -c 'echo ufp > /sys/class/dual_role_usb/otg_default/mode' 2>/dev/null", "D=/sys/class/dual_role_usb/otg_default; su -c 'echo sink > /sys/class/dual_role_usb/otg_default/power_role' 2>/dev/null", "D=/sys/class/dual_role_usb/otg_default; su -c 'echo device > /sys/class/dual_role_usb/otg_default/data_role' 2>/dev/null", "su -c 'echo 0 > /sys/class/power_supply/battery/input_suspend'", "su -c 'echo 0 > /sys/class/power_supply/battery/charging_enabled' 2>/dev/null", "su -c 'echo 1 > /sys/class/power_supply/usb/apsd_rerun' 2>/dev/null"].join('; ');
   }
 
   if (action === 'charge_resume') {

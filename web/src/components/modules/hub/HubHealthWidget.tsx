@@ -8,6 +8,7 @@ const GREEN = '#2fa84d';
 const STATUS_LABEL: Record<string, string> = {
   charging: 'Carregando',
   discharging: 'Descarregando',
+  not_charging: 'Sem carregar',
   full: 'Completo',
   unknown: 'Desconhecido',
 };

@@ -59,13 +59,23 @@ export type GitHubState = {
 export type HubState = {
   battery: {
     level: number;
-    status: 'charging' | 'discharging' | 'full' | 'unknown';
-    plugged: 'ac' | 'usb' | 'wireless' | 'unplugged';
+    status: 'charging' | 'discharging' | 'not_charging' | 'full' | 'unknown';
+    plugged: 'ac' | 'usb' | 'wireless' | 'unplugged' | 'plugged_ac' | 'plugged_usb' | 'plugged_wireless';
     temperature: number;
     inputSuspended?: boolean;
+    chargingEnabled?: boolean;
     usbPresent?: boolean;
     usbOnline?: boolean;
     usbVoltageMv?: number;
+    usbInputCurrentMa?: number;
+    usbInputPowerW?: number;
+    batteryVoltageMv?: number;
+    batteryCurrentMa?: number;
+    batteryPowerW?: number;
+    batteryDischargeCurrentMa?: number;
+    batteryDischargePowerW?: number;
+    systemPowerW?: number;
+    chargeType?: string;
   };
   wifi: {
     rssi: number;

@@ -38,6 +38,7 @@ export function SpotifyWidget({ isExpanded = false, onToggleExpanded }: SpotifyW
     () => spotify?.queue ?? []
   );
   const [resumeLoading, setResumeLoading] = useState(false);
+  const [documentVisible, setDocumentVisible] = useState(true);
   const waitingForResumeUpdate = useRef(false);
   const resumeLoadingTimer = useRef<number | null>(null);
 
@@ -53,6 +54,7 @@ export function SpotifyWidget({ isExpanded = false, onToggleExpanded }: SpotifyW
 
   useEffect(() => {
     function handleVisibilityChange() {
+      setDocumentVisible(document.visibilityState === 'visible');
       if (document.visibilityState !== 'visible') return;
 
       if (resumeLoadingTimer.current !== null) {
@@ -85,12 +87,13 @@ export function SpotifyWidget({ isExpanded = false, onToggleExpanded }: SpotifyW
     setResumeLoading(false);
   }, [spotify?.updatedAt]);
 
-  // Força re-renders a cada 250ms — liveProgressMs calculado no próprio render (sem state)
+  // Atualiza a barra de progresso só quando ela precisa avançar na tela.
   const [, tick] = useReducer(n => n + 1, 0);
   useEffect(() => {
-    const id = setInterval(tick, 250);
+    if (!documentVisible || !displayPlaying || !spotify?.durationMs) return;
+    const id = setInterval(tick, 1_000);
     return () => clearInterval(id);
-  }, []);
+  }, [displayPlaying, documentVisible, spotify?.durationMs]);
 
   const { ms: anchorMs, at: anchorAt, playing: anchorPlaying } = progressAnchor.current;
   const liveProgressMs = optimisticTrack ? 0

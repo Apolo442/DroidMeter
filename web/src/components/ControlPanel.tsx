@@ -7,6 +7,7 @@ import {
   BatteryCharging,
   CloudSun,
   Gauge,
+  MonitorOff,
   Moon,
   Power,
   Settings,
@@ -89,23 +90,90 @@ function Tile({ active, disabled, icon: Icon, label, detail, tone = 'gray', onCl
   );
 }
 
-function DiagnosticOverlay() {
+function formatDiagNumber(value: number | undefined, unit = "", digits = 1) {
+  if (value == null || !Number.isFinite(value)) return "--";
+  return `${value.toFixed(digits)}${unit}`;
+}
+
+function formatDiagMilli(value: number | undefined, unit: string, digits = 2) {
+  if (value == null || !Number.isFinite(value)) return "--";
+  return `${(value / 1000).toFixed(digits)}${unit}`;
+}
+
+function formatDiagAge(iso?: string) {
+  if (!iso) return "--";
+  return `${Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000))}s`;
+}
+
+function DiagnosticOverlay({ open, onClose }: { open: boolean; onClose: () => void }) {
   const hub = useDashboardStore((store) => store.state.hub);
   const spotify = useDashboardStore((store) => store.state.spotify);
-  const hubAge = hub?.updatedAt
-    ? Math.max(0, Math.round((Date.now() - new Date(hub.updatedAt).getTime()) / 1000))
-    : null;
-  const spotifyAge = spotify?.updatedAt
-    ? Math.max(0, Math.round((Date.now() - new Date(spotify.updatedAt).getTime()) / 1000))
-    : null;
+  const battery = hub?.battery;
+  const usbPowerW = battery?.usbInputPowerW
+    ?? (battery?.usbVoltageMv != null && battery?.usbInputCurrentMa != null
+      ? (battery.usbVoltageMv * battery.usbInputCurrentMa) / 1_000_000
+      : undefined);
+  const batteryPowerW = battery?.batteryPowerW
+    ?? (battery?.batteryVoltageMv != null && battery?.batteryCurrentMa != null && battery.batteryCurrentMa > 0
+      ? (battery.batteryVoltageMv * battery.batteryCurrentMa) / 1_000_000
+      : undefined);
+  const batteryDischargePowerW = battery?.batteryDischargePowerW
+    ?? (battery?.batteryVoltageMv != null && battery?.batteryCurrentMa != null && battery.batteryCurrentMa < 0
+      ? (battery.batteryVoltageMv * Math.abs(battery.batteryCurrentMa)) / 1_000_000
+      : undefined);
+  const systemPowerW = battery?.systemPowerW
+    ?? (usbPowerW != null || batteryPowerW != null || batteryDischargePowerW != null
+      ? Math.max(0, (usbPowerW ?? 0) - (batteryPowerW ?? 0) + (batteryDischargePowerW ?? 0))
+      : undefined);
+
+  const wattItems = [
+    { label: "Entrada", value: formatDiagNumber(usbPowerW, "W", 2) },
+    { label: "Carga bat", value: formatDiagNumber(batteryPowerW, "W", 2) },
+    { label: "Uso bat", value: formatDiagNumber(batteryDischargePowerW, "W", 2) },
+    { label: "Sistema", value: formatDiagNumber(systemPowerW, "W", 2) },
+  ];
+
+  const detailItems = [
+    { label: "USB", value: `${formatDiagMilli(battery?.usbVoltageMv, "V")} / ${formatDiagMilli(battery?.usbInputCurrentMa, "A")}` },
+    { label: "Bat V/A", value: `${formatDiagMilli(battery?.batteryVoltageMv, "V")} / ${formatDiagMilli(battery?.batteryCurrentMa, "A")}` },
+    { label: "Carga", value: battery?.inputSuspended ? "Pausada" : (battery?.chargeType ?? battery?.status ?? "--") },
+    { label: "USB estado", value: battery?.usbOnline ? "Online" : battery?.usbPresent ? "Presente" : "Off" },
+    { label: "Nível", value: battery ? `${battery.level}% / ${battery.temperature}°C` : "--" },
+    { label: "Wi-Fi", value: hub ? `${hub.wifi.signalLabel} / ${hub.wifi.latencyMs}ms` : "--" },
+    { label: "Hub", value: formatDiagAge(hub?.updatedAt) },
+    { label: "Tela", value: hub ? `${hub.screen.brightnessPercent}%` : "--" },
+  ];
 
   return (
-    <div className="diagnostic-overlay">
-      <span>Hub {hubAge == null ? '--' : `${hubAge}s`}</span>
-      <span>{hub?.battery.level ?? '--'}%</span>
-      <span>{hub?.battery.temperature ?? '--'}°C</span>
-      <span>{hub?.wifi.signalLabel ?? '--'}</span>
-      <span>Spotify {spotifyAge == null ? '--' : `${spotifyAge}s`}</span>
+    <div className={"diagnostic-overlay " + (open ? "is-open" : "")}>
+      <button
+        type="button"
+        className="diagnostic-close-zone"
+        onClick={onClose}
+        aria-label="Fechar diagnóstico"
+      />
+      <div className="diagnostic-header">
+        <span>Diagnóstico</span>
+        <strong>{formatDiagNumber(usbPowerW, "W", 1)}</strong>
+      </div>
+      <div className="diagnostic-grid">
+        <div className="diagnostic-watts">
+          {wattItems.map((item) => (
+            <div key={item.label} className="diagnostic-item diagnostic-watt-item">
+              <span>{item.label}</span>
+              <strong>{item.value}</strong>
+            </div>
+          ))}
+        </div>
+        <div className="diagnostic-details">
+          {detailItems.map((item) => (
+            <div key={item.label} className="diagnostic-item">
+              <span>{item.label}</span>
+              <strong>{item.value}</strong>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -130,12 +198,32 @@ function ScreenSaver({ onWake }: { onWake: () => void }) {
   );
 }
 
+function BlackoutTest({ onWake }: { onWake: () => void }) {
+  useEffect(() => {
+    const wake = () => onWake();
+    const events = ['pointerdown', 'touchstart', 'keydown'];
+    events.forEach((event) => window.addEventListener(event, wake, { once: true, passive: true }));
+    return () => events.forEach((event) => window.removeEventListener(event, wake));
+  }, [onWake]);
+
+  return (
+    <button
+      type="button"
+      className="blackout-test-overlay"
+      onPointerDown={onWake}
+      aria-label="Sair do teste preto"
+    />
+  );
+}
+
 export function ControlPanel({ onSettingsChange }: Props) {
   const [open, setOpen] = useState(false);
   const [settings, setSettings] = useState<ControlPanelSettings>(DEFAULT_SETTINGS);
   const [settingsLoaded, setSettingsLoaded] = useState(false);
   const [screenSaverVisible, setScreenSaverVisible] = useState(false);
   const [busyAction, setBusyAction] = useState<string | null>(null);
+  const [diagnosticVisible, setDiagnosticVisible] = useState(false);
+  const [blackoutTestVisible, setBlackoutTestVisible] = useState(false);
   const idleTimer = useRef<number | null>(null);
   const dimTimer = useRef<number | null>(null);
   const sleepTimer = useRef<number | null>(null);
@@ -153,6 +241,16 @@ export function ControlPanel({ onSettingsChange }: Props) {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
     onSettingsChange(settings);
   }, [onSettingsChange, settings]);
+
+  useEffect(() => {
+    if (settings.diagnosticMode) {
+      setDiagnosticVisible(true);
+      return;
+    }
+
+    const timer = window.setTimeout(() => setDiagnosticVisible(false), 360);
+    return () => window.clearTimeout(timer);
+  }, [settings.diagnosticMode]);
 
   useEffect(() => {
     if (!settingsLoaded || syncedAutoKiosk.current) return;
@@ -378,12 +476,26 @@ export function ControlPanel({ onSettingsChange }: Props) {
             >
               <Zap size={25} strokeWidth={2.5} />
             </button>
+
+            <button
+              type="button"
+              className="control-round control-blackout-test"
+              onClick={() => {
+                setOpen(false);
+                setScreenSaverVisible(false);
+                setBlackoutTestVisible(true);
+              }}
+              aria-label="Testar ghosting com preto real"
+            >
+              <MonitorOff size={22} strokeWidth={2.5} />
+            </button>
           </div>
         </section>
       </div>
 
       {screenSaverVisible && <ScreenSaver onWake={() => setScreenSaverVisible(false)} />}
-      {settings.diagnosticMode && <DiagnosticOverlay />}
+      {blackoutTestVisible && <BlackoutTest onWake={() => setBlackoutTestVisible(false)} />}
+      {diagnosticVisible && <DiagnosticOverlay open={settings.diagnosticMode} onClose={() => applySettings({ diagnosticMode: false })} />}
     </>
   );
 }

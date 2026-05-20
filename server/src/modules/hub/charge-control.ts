@@ -19,7 +19,7 @@ export function evaluateChargeControl(
   hub: HubState,
   options: { manualResumeOverride?: boolean } = {},
 ): ChargeDecision {
-  const suspended = Boolean(hub.battery.inputSuspended);
+  const suspended = Boolean(hub.battery.inputSuspended) || hub.battery.chargingEnabled === false;
   const level = hub.battery.level;
   const temp = hub.battery.temperature;
   const manualResumeOverride = Boolean(options.manualResumeOverride);
@@ -66,7 +66,7 @@ function phoneSshArgs(command: string) {
 
 async function setInputSuspend(suspend: boolean) {
   const command = suspend
-    ? "su -c 'echo 1 > /sys/class/power_supply/battery/input_suspend'"
+    ? ["D=/sys/class/dual_role_usb/otg_default; su -c 'echo ufp > /sys/class/dual_role_usb/otg_default/mode' 2>/dev/null", "D=/sys/class/dual_role_usb/otg_default; su -c 'echo sink > /sys/class/dual_role_usb/otg_default/power_role' 2>/dev/null", "D=/sys/class/dual_role_usb/otg_default; su -c 'echo device > /sys/class/dual_role_usb/otg_default/data_role' 2>/dev/null", "su -c 'echo 0 > /sys/class/power_supply/battery/input_suspend'", "su -c 'echo 0 > /sys/class/power_supply/battery/charging_enabled' 2>/dev/null", "su -c 'echo 1 > /sys/class/power_supply/usb/apsd_rerun' 2>/dev/null"].join('; ')
     : [
         "D=/sys/class/dual_role_usb/otg_default; su -c 'echo ufp > $D/mode' 2>/dev/null",
         "D=/sys/class/dual_role_usb/otg_default; su -c 'echo sink > $D/power_role' 2>/dev/null",

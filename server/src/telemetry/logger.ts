@@ -19,6 +19,7 @@ type TelemetryEvent = {
 
 type PreviousState = {
   chargeSuspended?: boolean;
+  powerMode?: string;
   spotifyPlaying?: boolean;
   spotifyTrack?: string;
   screenLikelyOn?: boolean;
@@ -92,11 +93,26 @@ function wifiLatencyBand(ms?: number) {
   return 'ok';
 }
 
+function powerMode(hub?: HubState) {
+  const battery = hub?.battery;
+  if (!battery) return 'unknown';
+  const usbIn = battery.usbInputPowerW ?? 0;
+  const batteryCharge = battery.batteryPowerW ?? 0;
+  const batteryDischarge = battery.batteryDischargePowerW ?? 0;
+
+  if (usbIn > 0.25 && batteryCharge <= 0.25 && batteryDischarge <= 0.25) return 'usb_bypass';
+  if (usbIn > 0.25 && batteryCharge > 0.25) return 'usb_charging_battery';
+  if (batteryDischarge > 0.25) return battery.usbPresent ? 'battery_with_usb_present' : 'battery_only';
+  if (battery.usbPresent && !battery.usbOnline) return 'usb_present_offline';
+  return 'idle_unknown';
+}
+
 function buildMetricRecord(state: DashboardState) {
   const hub = state.hub;
   const spotify = state.spotify;
   const hubAgeSec = secondsSince(hub?.updatedAt);
   const spotifyAgeSec = secondsSince(spotify?.updatedAt);
+  const mode = powerMode(hub);
 
   return {
     ts: nowIso(),
@@ -109,7 +125,19 @@ function buildMetricRecord(state: DashboardState) {
     batteryTempC: round(hub?.battery.temperature),
     batteryStatus: hub?.battery.status ?? null,
     batteryPlugged: hub?.battery.plugged ?? null,
-    chargeSuspended: hub?.battery.inputSuspended ?? null,
+    chargeSuspended: (hub?.battery.inputSuspended ?? false) || hub?.battery.chargingEnabled === false,
+    chargingEnabled: hub?.battery.chargingEnabled ?? null,
+    usbVoltageMv: hub?.battery.usbVoltageMv ?? null,
+    usbInputCurrentMa: hub?.battery.usbInputCurrentMa ?? null,
+    usbInputPowerW: round(hub?.battery.usbInputPowerW, 2),
+    batteryVoltageMv: hub?.battery.batteryVoltageMv ?? null,
+    batteryCurrentMa: hub?.battery.batteryCurrentMa ?? null,
+    batteryPowerW: round(hub?.battery.batteryPowerW, 2),
+    batteryDischargeCurrentMa: hub?.battery.batteryDischargeCurrentMa ?? null,
+    batteryDischargePowerW: round(hub?.battery.batteryDischargePowerW, 2),
+    systemPowerW: round(hub?.battery.systemPowerW, 2),
+    chargeType: hub?.battery.chargeType ?? null,
+    powerMode: mode,
 
     cpuUsagePct: round(hub?.cpuUsage),
     cpuTempC: round(hub?.cpuTemp),
@@ -160,7 +188,7 @@ function collectEvents(state: DashboardState, prev: PreviousState) {
   const nextSpotifyTrack = spotifyTrackKey(spotify);
 
   if (hub) {
-    const chargeSuspended = Boolean(hub.battery.inputSuspended);
+    const chargeSuspended = Boolean(hub.battery.inputSuspended) || hub.battery.chargingEnabled === false;
     if (prev.chargeSuspended != null && prev.chargeSuspended !== chargeSuspended) {
       events.push({
         ts: nowIso(),
@@ -168,9 +196,38 @@ function collectEvents(state: DashboardState, prev: PreviousState) {
         severity: 'info',
         batteryLevelPct: hub.battery.level,
         batteryTempC: hub.battery.temperature,
+        inputSuspended: hub.battery.inputSuspended ?? null,
+        chargingEnabled: hub.battery.chargingEnabled ?? null,
+        usbOnline: hub.battery.usbOnline ?? null,
+        usbInputPowerW: round(hub.battery.usbInputPowerW, 2),
+        batteryPowerW: round(hub.battery.batteryPowerW, 2),
+        batteryDischargePowerW: round(hub.battery.batteryDischargePowerW, 2),
+        systemPowerW: round(hub.battery.systemPowerW, 2),
       });
     }
     prev.chargeSuspended = chargeSuspended;
+
+    const nextPowerMode = powerMode(hub);
+    if (prev.powerMode != null && prev.powerMode !== nextPowerMode) {
+      events.push({
+        ts: nowIso(),
+        event: 'power_mode_changed',
+        severity: nextPowerMode === 'battery_with_usb_present' || nextPowerMode === 'battery_only' ? 'warn' : 'info',
+        previousPowerMode: prev.powerMode,
+        powerMode: nextPowerMode,
+        batteryLevelPct: hub.battery.level,
+        batteryTempC: hub.battery.temperature,
+        inputSuspended: hub.battery.inputSuspended ?? null,
+        chargingEnabled: hub.battery.chargingEnabled ?? null,
+        usbPresent: hub.battery.usbPresent ?? null,
+        usbOnline: hub.battery.usbOnline ?? null,
+        usbInputPowerW: round(hub.battery.usbInputPowerW, 2),
+        batteryPowerW: round(hub.battery.batteryPowerW, 2),
+        batteryDischargePowerW: round(hub.battery.batteryDischargePowerW, 2),
+        systemPowerW: round(hub.battery.systemPowerW, 2),
+      });
+    }
+    prev.powerMode = nextPowerMode;
 
     const isScreenOn = screenLikelyOn(hub);
     if (prev.screenLikelyOn != null && prev.screenLikelyOn !== isScreenOn) {
@@ -265,7 +322,15 @@ function buildSecurityRecord(state: DashboardState) {
     hubAgeSec,
     spotifyDataFresh: spotifyAgeSec != null && spotifyAgeSec < 30,
     spotifyAgeSec,
-    chargeSuspended: state.hub?.battery.inputSuspended ?? null,
+    chargeSuspended: (state.hub?.battery.inputSuspended ?? false) || state.hub?.battery.chargingEnabled === false,
+    chargingEnabled: state.hub?.battery.chargingEnabled ?? null,
+    powerMode: powerMode(state.hub),
+    usbPresent: state.hub?.battery.usbPresent ?? null,
+    usbOnline: state.hub?.battery.usbOnline ?? null,
+    usbInputPowerW: round(state.hub?.battery.usbInputPowerW, 2),
+    batteryPowerW: round(state.hub?.battery.batteryPowerW, 2),
+    batteryDischargePowerW: round(state.hub?.battery.batteryDischargePowerW, 2),
+    systemPowerW: round(state.hub?.battery.systemPowerW, 2),
     screenLikelyOn: state.hub ? screenLikelyOn(state.hub) : null,
     wifiSignalLabel: state.hub?.wifi.signalLabel ?? null,
     wifiLatencyMs: state.hub?.wifi.latencyMs ?? null,
