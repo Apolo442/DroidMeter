@@ -25,10 +25,23 @@ if [ -s "$NVM_DIR/nvm.sh" ]; then
   . "$NVM_DIR/nvm.sh"
 
   if [ -f ".nvmrc" ]; then
-    nvm use --silent --delete-prefix >/dev/null
+    if ! nvm use --silent --delete-prefix >/dev/null; then
+      echo "DroidMeter: Node version from .nvmrc is not installed. Run: nvm install" >&2
+      exit 1
+    fi
+  elif nvm use --silent --delete-prefix v24.12.0 >/dev/null; then
+    :
+  elif nvm use --silent --delete-prefix node >/dev/null; then
+    :
   else
-    nvm use --silent --delete-prefix v24.12.0 >/dev/null || nvm use --silent --delete-prefix node >/dev/null
+    echo "DroidMeter: no usable Node version found in NVM. Run: nvm install v24.12.0" >&2
+    exit 1
   fi
+fi
+
+if ! command -v node >/dev/null 2>&1 || ! command -v npm >/dev/null 2>&1; then
+  echo "DroidMeter: node/npm not found. Install Node, for example: nvm install v24.12.0" >&2
+  exit 1
 fi
 
 echo "DroidMeter: using node $(node --version) and npm $(npm --version)"

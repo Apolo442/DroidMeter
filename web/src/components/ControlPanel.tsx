@@ -128,9 +128,9 @@ function DiagnosticOverlay({ open, onClose }: { open: boolean; onClose: () => vo
 
   const wattItems = [
     { label: "Entrada", value: formatDiagNumber(usbPowerW, "W", 2) },
-    { label: "Carga bat", value: formatDiagNumber(batteryPowerW, "W", 2) },
-    { label: "Uso bat", value: formatDiagNumber(batteryDischargePowerW, "W", 2) },
     { label: "Sistema", value: formatDiagNumber(systemPowerW, "W", 2) },
+    { label: "Bat input", value: formatDiagNumber(batteryPowerW, "W", 2) },
+    { label: "Bat output", value: formatDiagNumber(batteryDischargePowerW, "W", 2) },
   ];
 
   const detailItems = [
@@ -139,9 +139,9 @@ function DiagnosticOverlay({ open, onClose }: { open: boolean; onClose: () => vo
     { label: "Carga", value: battery?.inputSuspended ? "Pausada" : (battery?.chargeType ?? battery?.status ?? "--") },
     { label: "USB estado", value: battery?.usbOnline ? "Online" : battery?.usbPresent ? "Presente" : "Off" },
     { label: "Nível", value: battery ? `${battery.level}% / ${battery.temperature}°C` : "--" },
-    { label: "Wi-Fi", value: hub ? `${hub.wifi.signalLabel} / ${hub.wifi.latencyMs}ms` : "--" },
+    { label: "CPU", value: hub ? `${hub.cpuUsage}% / ${hub.cpuTemp}°` : "--" },
     { label: "Hub", value: formatDiagAge(hub?.updatedAt) },
-    { label: "Tela", value: hub ? `${hub.screen.brightnessPercent}%` : "--" },
+    { label: "Wi-Fi", value: hub ? `${hub.wifi.signalLabel} / ${hub.wifi.latencyMs}ms` : "--" },
   ];
 
   return (
@@ -151,6 +151,12 @@ function DiagnosticOverlay({ open, onClose }: { open: boolean; onClose: () => vo
         className="diagnostic-close-zone"
         onClick={onClose}
         aria-label="Fechar diagnóstico"
+      />
+      <button
+        type="button"
+        className="diagnostic-reload-zone"
+        onClick={() => window.location.reload()}
+        aria-label="Recarregar dashboard"
       />
       <div className="diagnostic-header">
         <span>Diagnóstico</span>
@@ -211,7 +217,7 @@ function BlackoutTest({ onWake }: { onWake: () => void }) {
       type="button"
       className="blackout-test-overlay"
       onPointerDown={onWake}
-      aria-label="Sair do teste preto"
+      aria-label="Sair do teste cinza"
     />
   );
 }
@@ -485,7 +491,7 @@ export function ControlPanel({ onSettingsChange }: Props) {
                 setScreenSaverVisible(false);
                 setBlackoutTestVisible(true);
               }}
-              aria-label="Testar ghosting com preto real"
+              aria-label="Testar ghosting com cinza do fundo"
             >
               <MonitorOff size={22} strokeWidth={2.5} />
             </button>

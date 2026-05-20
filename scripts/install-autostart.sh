@@ -5,14 +5,21 @@ PROJECT_DIR="/mnt/Kingston/Coding/redmi-project"
 UNIT_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user"
 UNIT_FILE="$UNIT_DIR/droidmeter.service"
 WRAPPER="$PROJECT_DIR/scripts/droidmeter-autostart.sh"
+NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
 
 if ! command -v systemctl >/dev/null 2>&1; then
   echo "systemctl não encontrado; não dá para instalar autostart via systemd." >&2
   exit 1
 fi
 
+if ! command -v npm >/dev/null 2>&1 && [ -s "$NVM_DIR/nvm.sh" ]; then
+  # Interactive shell config is not guaranteed to be loaded when this script runs.
+  . "$NVM_DIR/nvm.sh"
+  nvm use --silent --delete-prefix v24.12.0 >/dev/null 2>&1 || nvm use --silent --delete-prefix node >/dev/null 2>&1 || true
+fi
+
 if ! command -v npm >/dev/null 2>&1; then
-  echo "npm não encontrado no PATH atual." >&2
+  echo "npm não encontrado. Instale Node antes, por exemplo: nvm install v24.12.0" >&2
   exit 1
 fi
 
